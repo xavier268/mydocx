@@ -32,6 +32,42 @@ type Text struct {
 	Value string `xml:",chardata"`
 }
 
+// extract paragraph text content from docx file for future processing.
+func extractTextFromDocx(filePath string) ([]string, error) {
+	docxFile, err := zip.OpenReader(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open docx file: %v", err)
+	}
+	defer docxFile.Close()
+
+	var paragraphs []string
+	for _, file := range docxFile.File {
+		if file.Name == "word/document.xml" {
+			documentContent, err := readFile(file)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read document.xml: %v", err)
+			}
+
+			var doc Document
+			err = xml.Unmarshal(documentContent, &doc)
+			if err != nil {
+				return nil, fmt.Errorf("failed to unmarshal document.xml: %v", err)
+			}
+
+			for _, p := range doc.Body.Paragraphs {
+				paragraphText := ""
+				for _, r := range p.Runs {
+					paragraphText += r.Text.Value
+				}
+				paragraphs = append(paragraphs, paragraphText)
+			}
+			break
+		}
+	}
+
+	return paragraphs, nil
+}
+
 // Function to extract and modify paragraphs
 func modifyParagraphsInDocx(filePath string, replacer func(string) string) error {
 	// Open the .docx (which is a zip file)
