@@ -14,14 +14,17 @@ type Document struct {
 	XMLName xml.Name `xml:"document"`
 	Body    Body     `xml:"body"`
 	XMLNSw  string   `xml:"xmlns:w,attr"`
+	Other   string   `xml:",innerxml"` // All other tags, kept unchanged
 }
 
 type Body struct {
 	Paragraphs []Paragraph `xml:"p"`
+	Other      string      `xml:",innerxml"` // All other tags, kept unchanged
 }
 
 type Paragraph struct {
-	Runs []Run `xml:"r"`
+	Runs  []Run  `xml:"r"`
+	Other string `xml:",innerxml"` // All other tags, kept unchanged
 }
 
 type Run struct {
@@ -153,10 +156,4 @@ func copyFileToZip(zipWriter *zip.Writer, file *zip.File) error {
 
 	_, err = io.Copy(writer, readCloser)
 	return err
-}
-
-// TODO ... (no change at this stage)
-func processDocumentXML(documentContent []byte, replacer func(string) string) ([]byte, error) {
-	_ = replacer // for the compiler to not complain about an unused variable
-	return documentContent, nil
 }
