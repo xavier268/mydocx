@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 )
 
@@ -100,7 +99,7 @@ func readFile(f *zip.File) ([]byte, error) {
 	}
 	defer rc.Close()
 
-	return ioutil.ReadAll(rc)
+	return io.ReadAll(rc)
 }
 
 // Helper function to copy unmodified files to the new zip
@@ -120,18 +119,8 @@ func copyFileToZip(zipWriter *zip.Writer, file *zip.File) error {
 	return err
 }
 
+// TODO ... (no change at this stage)
 func processDocumentXML(documentContent []byte, replacer func(string) string) ([]byte, error) {
-	var doc Document
-	if err := xml.Unmarshal(documentContent, &doc); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal document.xml: %v", err)
-	}
-
-	for i, paragraph := range doc.Body.Paragraphs {
-		for j, run := range paragraph.Runs {
-			run.Text.Value = replacer(run.Text.Value)
-			doc.Body.Paragraphs[i].Runs[j] = run
-		}
-	}
-
-	return xml.Marshal(doc)
+	_ = replacer // for the compiler to not complain about an unused variable
+	return documentContent, nil
 }
