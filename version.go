@@ -6,8 +6,6 @@ package mydocx
 // v0.1.4		programmatically remove paragraph, based on their content
 // v0.1.5		cleanup code, doc
 
-const NAME = "docxtransform"
-
 const VERSION = "0.1.5"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
