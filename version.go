@@ -2,7 +2,7 @@ package mydocx
 
 // v0.1.1		first functionnal version
 // v0.1.2		code cleanup, API simplification.
-// v0.1.3		use golang tempates (optionnal)
+// v0.1.3		use golang templates (optionnal)
 
 const NAME = "docxtransform"
 
