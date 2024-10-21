@@ -1,7 +1,13 @@
-package docxtransform
+package mydocx
 
-const VERSION = "0.1.1"
+// v0.1.1		first functionnal version
+// v0.1.2		code cleanup, API simplification.
+// v0.1.3		use golang tempates (optionnal)
+
+const NAME = "docxtransform"
+
+const VERSION = "0.1.3"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 
-var DEBUG = false
+var debugFlag = false

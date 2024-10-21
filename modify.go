@@ -1,13 +1,91 @@
-package docxtransform
+package mydocx
 
 import (
+	"archive/zip"
 	"bytes"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"os"
 )
 
 const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+// A replacer replaces a string with a modified string.
+type Replacer func(string) string
+
+// All text from the sourceFile is modified by applying the replace function to it.
+// Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
+// Replace function is called paragraph by paragraph. No special assupmtion is made for empty paragraph.
+// If the replace function is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing internal paragraph formatting !).
+// If the targetFile name is empty, the sourceFile will be used, modification will be done in place.
+func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) error {
+
+	// Open the .docx (which is a zip file)
+	docxFile, err := zip.OpenReader(sourceFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to open docx file: %v", err)
+	}
+	defer docxFile.Close()
+
+	// default replace function
+	if replace == nil {
+		replace = func(s string) string { return s }
+	}
+
+	// Prepare a buffer to store the modified .docx content
+	var buffer bytes.Buffer
+	zipWriter := zip.NewWriter(&buffer)
+
+	// Locate the document.xml file
+	var documentContent []byte
+	for _, file := range docxFile.File {
+		if file.Name == "word/document.xml" {
+			documentContent, err = readFile(file)
+			if err != nil {
+				return fmt.Errorf("failed to read document.xml: %v", err)
+			}
+			continue
+		}
+		// Copy other files unmodified into the new .docx
+		if err := copyFileToZip(zipWriter, file); err != nil {
+			return fmt.Errorf("failed to copy file: %v", err)
+		}
+	}
+
+	if documentContent == nil {
+		return fmt.Errorf("document.xml not found in the docx file")
+	}
+
+	// do the actual processing
+	cd := newCustDecoder(documentContent, replace)
+	cd.processBody()
+	modifiedXML, err := cd.result()
+	if err != nil {
+		return fmt.Errorf("failed to process document.xml: %v", err)
+	}
+
+	// Add the modified document.xml back into the new .docx archive
+	writer, err := zipWriter.Create("word/document.xml")
+	if err != nil {
+		return fmt.Errorf("failed to add modified document.xml to docx: %v", err)
+	}
+	_, err = writer.Write(modifiedXML)
+	if err != nil {
+		return fmt.Errorf("failed to write modified document.xml: %v", err)
+	}
+
+	// Close the zip writer
+	if err := zipWriter.Close(); err != nil {
+		return fmt.Errorf("failed to close zip writer: %v", err)
+	}
+
+	// Save the modified .docx
+	if targetFilePath == "" {
+		targetFilePath = sourceFilePath
+	}
+	return os.WriteFile(targetFilePath, buffer.Bytes(), 0644)
+}
 
 type custDecoder struct {
 	dec       *xml.Decoder
