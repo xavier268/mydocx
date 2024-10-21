@@ -47,7 +47,6 @@ func TestDocModifyTpl2(t *testing.T) {
 		Age:  30,
 	}
 
-	debugFlag = true
 	err := ModifyText(source, NewTplReplacer(c), target2)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -65,7 +64,6 @@ func TestDocModifyTpl3(t *testing.T) {
 		Age:  12,
 	}
 
-	debugFlag = true
 	err := ModifyText(source, NewTplReplacer(c), target3)
 	if err != nil {
 		fmt.Println("Error:", err)

@@ -166,11 +166,12 @@ func (cd *custDecoder) processParagraphs() {
 	defer cd.copy()
 	var tok xml.Token
 	for cd.err == nil {
+		cd.copy()
 		tok, cd.err = cd.dec.Token()
 		if cd.err != nil {
 			break // in all case, stop and return err - EOF is abnormal in this case.
 		}
-		cd.copy()
+		cd.copy() // ensure copy before a new paragraph start, that could be later discared
 		switch t := tok.(type) {
 		default:
 		case xml.StartElement:
@@ -220,12 +221,12 @@ func (cd *custDecoder) processRuns() {
 						cd.lastSaved = cd.dec.InputOffset()
 					} else {
 						cd.res[cd.firstRun] = []byte(ns) // save agg content to first run
-						fmt.Println("saving rcontent to index ", cd.firstRun)
+						// fmt.Println("saving rcontent to index ", cd.firstRun)
 					}
 				}
 				cd.rcontent = nil
 				cd.firstRun = -1
-				fmt.Printf("Res : %s\n", cd.res)
+				// fmt.Printf("Res : %s\n", cd.res)
 				return
 			}
 		}
@@ -269,7 +270,7 @@ func (cd *custDecoder) processTextContent() {
 	defer cd.copy()
 	var tok xml.Token
 	for cd.err == nil {
-		cd.copy()
+		cd.copy() // ensure copy is up to date before text is read/discarded.
 		tok, cd.err = cd.dec.Token()
 		if cd.err != nil {
 			break // in all case, stop and return err - EOF is abnormal in this case.
