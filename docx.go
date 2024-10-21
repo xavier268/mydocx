@@ -9,22 +9,20 @@ import (
 	"os"
 )
 
-// Define the XML structure for the relevant tags
-type Document struct {
+// Define the XML structure, but only for the relevant tags
+// Only used for extraction, since all other necessary fields are discarded.
+type SimplifiedDocument struct {
 	XMLName xml.Name `xml:"document"`
 	Body    Body     `xml:"body"`
 	XMLNSw  string   `xml:"xmlns:w,attr"`
-	Other   string   `xml:",innerxml"` // All other tags, kept unchanged
 }
 
 type Body struct {
 	Paragraphs []Paragraph `xml:"p"`
-	Other      string      `xml:",innerxml"` // All other tags, kept unchanged
 }
 
 type Paragraph struct {
-	Runs  []Run  `xml:"r"`
-	Other string `xml:",innerxml"` // All other tags, kept unchanged
+	Runs []Run `xml:"r"`
 }
 
 type Run struct {
@@ -51,10 +49,18 @@ func extractTextFromDocx(filePath string) ([]string, error) {
 				return nil, fmt.Errorf("failed to read document.xml: %v", err)
 			}
 
-			var doc Document
+			if DEBUG {
+				fmt.Printf("\n%q\n", documentContent)
+			}
+
+			var doc SimplifiedDocument
 			err = xml.Unmarshal(documentContent, &doc)
 			if err != nil {
 				return nil, fmt.Errorf("failed to unmarshal document.xml: %v", err)
+			}
+
+			if DEBUG {
+				fmt.Printf("\n%v\n", doc)
 			}
 
 			for _, p := range doc.Body.Paragraphs {
@@ -73,6 +79,7 @@ func extractTextFromDocx(filePath string) ([]string, error) {
 
 // Function to extract and modify paragraphs
 func modifyParagraphsInDocx(filePath string, replacer func(string) string) error {
+	_ = replacer
 	// Open the .docx (which is a zip file)
 	docxFile, err := zip.OpenReader(filePath)
 	if err != nil {
@@ -105,8 +112,9 @@ func modifyParagraphsInDocx(filePath string, replacer func(string) string) error
 	}
 
 	// do the actual processing
-
-	modifiedXML, err := processDocumentXML(documentContent, replacer)
+	cd := newCustDecoder(documentContent, replacer)
+	cd.processBody()
+	modifiedXML, err := cd.result()
 	if err != nil {
 		return fmt.Errorf("failed to process document.xml: %v", err)
 	}
