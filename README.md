@@ -13,9 +13,9 @@ Extract or Transform text content within a word document. Pure go, no external d
 
 This library is designed to manage text within a paragraph, from a word docx model. **It cannot create new paragraphs.**
 
-The tempating engine **CANNOT** be used across paragraph boundaries. You may **NOT** start an *{{if ...}}* in one paragraph and the balancing *{{end}}* in the next paragraph.
+The template engine **CANNOT** be used across paragraph boundaries. You may **NOT** start an *{{if ...}}* in one paragraph and the balancing *{{end}}* in the next paragraph.
 
-However, the Replacer **CAN**  programatically request the suppression of its containing paragraph (useful if some paragraph only occur in certain cases, but you don't want empty lines ).
+However, the Replacer **CAN**  programatically request the suppression of its containing paragraph (useful if some paragraph only occur in certain cases, but you don't want empty lines).
 
 ## Examples
 
