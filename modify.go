@@ -12,7 +12,8 @@ import (
 const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 // A replacer replaces a string with a modified string.
-type Replacer func(string) string
+// It provides a flag that can trigger the removal of the entire paragraph.
+type Replacer func(original string) (replaced string, discard bool)
 
 // All text from the sourceFile is modified by applying the replace function to it.
 // Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
@@ -30,7 +31,7 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 
 	// default replace function
 	if replace == nil {
-		replace = func(s string) string { return s }
+		replace = func(s string) (string, bool) { return s, false }
 	}
 
 	// Prepare a buffer to store the modified .docx content
@@ -89,17 +90,18 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 
 type custDecoder struct {
 	dec       *xml.Decoder
-	input     []byte              // initial doc content, unchanged
-	res       [][]byte            // result afeter processing
-	replace   func(string) string // replacer string
-	lastSaved int64               // index of last saved byte, index from input byte slice
-	err       error               // last error
-	firstRun  int                 // contains index of first run content
-	rcontent  []byte              // agrregated text content of all runs from the same paragraph
+	input     []byte   // initial doc content, unchanged
+	res       [][]byte // result afeter processing
+	replace   Replacer // replacer function
+	lastSaved int64    // index of last saved byte, index from input byte slice
+	err       error    // last error
+	firstRun  int      // contains index of first run content
+	rcontent  []byte   // agrregated text content of all runs from the same paragraph
+	curPara   int      // index of the res element where the current paragraph starts. Used to destroy paragraph upon request.
 
 }
 
-func newCustDecoder(documentContent []byte, replacer func(string) string) *custDecoder {
+func newCustDecoder(documentContent []byte, replacer Replacer) *custDecoder {
 	return &custDecoder{
 		input:     documentContent,
 		dec:       xml.NewDecoder(bytes.NewReader(documentContent)),
@@ -109,6 +111,7 @@ func newCustDecoder(documentContent []byte, replacer func(string) string) *custD
 		err:       nil,
 		firstRun:  -1,
 		rcontent:  nil,
+		curPara:   -1,
 	}
 }
 
@@ -123,6 +126,9 @@ func (cd *custDecoder) result() ([]byte, error) {
 // Copy the newly parsed content of the original docx to the result up to the last token parsed, included.
 func (cd *custDecoder) copy() {
 	last := cd.dec.InputOffset()
+	if last <= cd.lastSaved+1 {
+		return
+	}
 	cd.res = append(cd.res, cd.input[cd.lastSaved+1:last])
 	cd.lastSaved = last - 1
 }
@@ -155,7 +161,7 @@ func (cd *custDecoder) processBody() {
 
 // process paragraphs
 func (cd *custDecoder) processParagraphs() {
-	cd.copy()
+
 	defer cd.copy()
 	var tok xml.Token
 	for cd.err == nil {
@@ -163,13 +169,14 @@ func (cd *custDecoder) processParagraphs() {
 		if cd.err != nil {
 			break // in all case, stop and return err - EOF is abnormal in this case.
 		}
-
+		cd.copy()
 		switch t := tok.(type) {
 		default:
 		case xml.StartElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
 				fmt.Printf("Captured :%s\n", t.Name.Local)
-				cd.copy()
+				cd.curPara = len(cd.res) // used to truncate later the current paragraph if so desired
+				cd.copy()                // save the <p> tag.
 				cd.processRuns()
 			}
 		case xml.EndElement:
@@ -206,8 +213,14 @@ func (cd *custDecoder) processRuns() {
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
 				fmt.Printf("Captured :/%s\n", t.Name.Local)
 				if cd.firstRun >= 0 {
-					cd.res[cd.firstRun] = []byte(cd.replace((string)(cd.rcontent))) // save agg content to first run
-					fmt.Println("saving rcontent to index ", cd.firstRun)
+					ns, discard := cd.replace((string)(cd.rcontent))
+					if discard {
+						cd.res = cd.res[:cd.curPara] // destroy the paragraph
+						cd.lastSaved = cd.dec.InputOffset()
+					} else {
+						cd.res[cd.firstRun] = []byte(ns) // save agg content to first run
+						fmt.Println("saving rcontent to index ", cd.firstRun)
+					}
 				}
 				cd.rcontent = nil
 				cd.firstRun = -1

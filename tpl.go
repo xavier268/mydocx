@@ -10,15 +10,20 @@ import (
 // NewTplReplacer creates a replacer that will apply the provided content struct to the template in each paragraph.
 // If an error occurs during template conversion, the text of the error is returned, together with the original text that triggered the error.
 func NewTplReplacer(content any) Replacer {
-	return func(para string) string {
+	return func(para string) (string, bool) {
+
+		if para == "" {
+			return "", true // leave epty original paragraph untouched.
+		}
 
 		var res = new(strings.Builder)
 
 		tpl := template.Must(template.New("docx").Parse(para))
 		err := tpl.Execute(res, content)
 		if err != nil {
-			return para + " ***ERROR*** " + err.Error()
+			return para + " ***ERROR*** " + err.Error(), false
 		}
-		return res.String()
+		rs := res.String()
+		return rs, rs == "" // discard if result string is empty string.
 	}
 }
