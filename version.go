@@ -8,7 +8,7 @@ package mydocx
 
 const NAME = "docxtransform"
 
-const VERSION = "0.1.3"
+const VERSION = "0.1.5"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 
