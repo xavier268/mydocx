@@ -11,9 +11,11 @@ var target1 string = filepath.Join("testFiles", "test-modified1.docx")
 var target2 string = filepath.Join("testFiles", "test-modified-tpl2.docx")
 var target3 string = filepath.Join("testFiles", "test-modified-tpl3.docx")
 
+func init() {
+	// debugFlag = true
+}
 func TestDocExtract(t *testing.T) {
 
-	debugFlag = true
 	pp, err := ExtractText(source)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -22,18 +24,17 @@ func TestDocExtract(t *testing.T) {
 	for i, p := range pp {
 		fmt.Printf("%d: %q\n", i, p)
 	}
-	debugFlag = false
+
 }
 
 func TestDocModify(t *testing.T) {
 
-	debugFlag = true
 	//err := ModifyText(source, strings.ToUpper, target)
 	err := ModifyText(source, nil, target1)
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	debugFlag = false
+
 }
 
 func TestDocModifyTpl2(t *testing.T) {
@@ -51,7 +52,7 @@ func TestDocModifyTpl2(t *testing.T) {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	debugFlag = false
+
 }
 
 func TestDocModifyTpl3(t *testing.T) {
@@ -69,5 +70,5 @@ func TestDocModifyTpl3(t *testing.T) {
 	if err != nil {
 		fmt.Println("Error:", err)
 	}
-	debugFlag = false
+
 }

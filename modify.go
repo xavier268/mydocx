@@ -13,6 +13,7 @@ const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 // A replacer replaces a string with a modified string.
 // It provides a flag that can trigger the removal of the entire paragraph.
+// You may design your own Replacer, without relying on the go template engine (or using another one).
 type Replacer func(original string) (replaced string, discard bool)
 
 // All text from the sourceFile is modified by applying the replace function to it.
@@ -119,7 +120,7 @@ func newCustDecoder(documentContent []byte, replacer Replacer) *custDecoder {
 func (cd *custDecoder) result() ([]byte, error) {
 	cd.copy()
 	fr := bytes.Join(cd.res, nil)
-	fmt.Println("Final result \n", (string)(fr))
+	//fmt.Println("Final result \n", (string)(fr))
 	return fr, cd.err
 }
 
@@ -150,7 +151,7 @@ func (cd *custDecoder) processBody() {
 		default:
 		case xml.StartElement:
 			if t.Name.Local == "body" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :%s\n", t.Name.Local)
+				//fmt.Printf("Captured :%s\n", t.Name.Local)
 				cd.copy()
 				cd.processParagraphs()
 			}
@@ -174,7 +175,7 @@ func (cd *custDecoder) processParagraphs() {
 		default:
 		case xml.StartElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :%s\n", t.Name.Local)
+				//fmt.Printf("Captured :%s\n", t.Name.Local)
 				cd.curPara = len(cd.res) // used to truncate later the current paragraph if so desired
 				cd.copy()                // save the <p> tag.
 				cd.processRuns()
@@ -205,13 +206,13 @@ func (cd *custDecoder) processRuns() {
 		default:
 		case xml.StartElement:
 			if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :%s\n", t.Name.Local)
+				//fmt.Printf("Captured :%s\n", t.Name.Local)
 				cd.copy()
 				cd.processText()
 			}
 		case xml.EndElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :/%s\n", t.Name.Local)
+				//fmt.Printf("Captured :/%s\n", t.Name.Local)
 				if cd.firstRun >= 0 {
 					ns, discard := cd.replace((string)(cd.rcontent))
 					if discard {
@@ -245,7 +246,7 @@ func (cd *custDecoder) processText() {
 		default:
 		case xml.StartElement:
 			if t.Name.Local == "t" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :%s\n", t.Name.Local)
+				//fmt.Printf("Captured :%s\n", t.Name.Local)
 				cd.copy()
 				if cd.firstRun < 0 {
 					cd.res = append(cd.res, []byte{}) // place holder for future aggregated text
@@ -255,7 +256,7 @@ func (cd *custDecoder) processText() {
 			}
 		case xml.EndElement:
 			if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
-				fmt.Printf("Captured :/%s\n", t.Name.Local)
+				//fmt.Printf("Captured :/%s\n", t.Name.Local)
 				return
 			}
 
@@ -279,7 +280,7 @@ func (cd *custDecoder) processTextContent() {
 			cd.copy()
 		case xml.CharData:
 			cd.rcontent = append(cd.rcontent, t...)
-			fmt.Printf("\t -> %s\n", (string)(cd.rcontent))
+			//fmt.Printf("\t -> %s\n", (string)(cd.rcontent))
 			// skip copy of chardata, assuming the rest was already copied
 			cd.lastSaved = cd.dec.InputOffset() - 1
 		case xml.EndElement:
