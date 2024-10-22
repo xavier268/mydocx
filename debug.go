@@ -2,8 +2,14 @@ package mydocx
 
 import "fmt"
 
+const skipdebugflag = true
+
 // debug helper
 func (cd *custDecoder) debug(message ...any) {
+
+	if skipdebugflag {
+		return
+	}
 
 	fmt.Print("Debug : ")
 	for _, m := range message {
@@ -17,6 +23,11 @@ func (cd *custDecoder) debug(message ...any) {
 
 // debug helper
 func (cd *custDecoder) dumpRes() {
+
+	if skipdebugflag {
+		return
+	}
+
 	fmt.Println("\nRes =")
 	for i, s := range cd.res {
 		h := ""

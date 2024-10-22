@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 )
 
 const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
@@ -39,43 +40,27 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 	var buffer bytes.Buffer
 	zipWriter := zip.NewWriter(&buffer)
 
-	// Locate the document.xml file
+	// Locate the document.xml and headers/footers files
 	var documentContent []byte
+	patt := regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]\.xml)|(word/header[0-9]\.xml)$`)
 	for _, file := range docxFile.File {
-		if file.Name == "word/document.xml" {
+		fname := file.Name
+		if patt.MatchString(fname) {
+			fmt.Println("Processing", fname)
 			documentContent, err = readFile(file)
 			if err != nil {
 				return fmt.Errorf("failed to read document.xml: %v", err)
 			}
-			continue
+			err = processContent(fname, documentContent, replace, zipWriter)
+			if err != nil {
+				return err
+			}
+			continue // to next file container ...
 		}
 		// Copy other files unmodified into the new .docx
 		if err := copyFileToZip(zipWriter, file); err != nil {
 			return fmt.Errorf("failed to copy file: %v", err)
 		}
-	}
-
-	if documentContent == nil {
-		return fmt.Errorf("document.xml not found in the docx file")
-	}
-
-	// do the actual processing
-	cd := newCustDecoder(documentContent, replace)
-	cd.processParagraphs()
-	cd.debug("Finished processing ...")
-	modifiedXML, err := cd.result()
-	if err != nil {
-		return fmt.Errorf("failed to process document.xml: %v", err)
-	}
-
-	// Add the modified document.xml back into the new .docx archive
-	writer, err := zipWriter.Create("word/document.xml")
-	if err != nil {
-		return fmt.Errorf("failed to add modified document.xml to docx: %v", err)
-	}
-	_, err = writer.Write(modifiedXML)
-	if err != nil {
-		return fmt.Errorf("failed to write modified document.xml: %v", err)
 	}
 
 	// Close the zip writer
@@ -88,6 +73,33 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 		targetFilePath = sourceFilePath
 	}
 	return os.WriteFile(targetFilePath, buffer.Bytes(), 0644)
+}
+
+// process either the actual document.xml or the footer/header(s)
+func processContent(filename string, documentContent []byte, replace Replacer, zipWriter *zip.Writer) error {
+
+	if documentContent == nil {
+		return fmt.Errorf("%s not found in the docx file", filename)
+	}
+
+	cd := newCustDecoder(documentContent, replace)
+	cd.processParagraphs()
+	cd.debug("Finished processing ...", filename)
+	modifiedXML, err := cd.result()
+	if err != nil {
+		return fmt.Errorf("failed to process %s: %v", filename, err)
+	}
+
+	// Add the modified xxx.xml back into the new .docx archive
+	writer, err := zipWriter.Create(filename)
+	if err != nil {
+		return fmt.Errorf("failed to add modified %s to docx: %v", filename, err)
+	}
+	_, err = writer.Write(modifiedXML)
+	if err != nil {
+		return fmt.Errorf("failed to write modified %s: %v", filename, err)
+	}
+	return nil
 }
 
 type custDecoder struct {
@@ -143,7 +155,6 @@ func (cd *custDecoder) processParagraphs() {
 		switch t := tok.(type) {
 		case xml.StartElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
-				cd.debug("found <p>")
 				cd.curPara = len(cd.res) - 1 // mark para start, used to truncate later the current paragraph if so desired
 				cd.processRuns()
 			}
