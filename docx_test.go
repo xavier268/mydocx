@@ -27,7 +27,7 @@ func TestDocExtract(t *testing.T) {
 
 }
 
-func TestDocModify(t *testing.T) {
+func TestDocModify1(t *testing.T) {
 
 	//err := ModifyText(source, strings.ToUpper, target)
 	err := ModifyText(source, nil, target1)

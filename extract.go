@@ -26,18 +26,10 @@ func ExtractText(sourceFilePath string) ([]string, error) {
 				return nil, fmt.Errorf("failed to read document.xml: %v", err)
 			}
 
-			if debugFlag {
-				fmt.Printf("\n%q\n", documentContent)
-			}
-
 			var doc openxml.SimplifiedDocument
 			err = xml.Unmarshal(documentContent, &doc)
 			if err != nil {
 				return nil, fmt.Errorf("failed to unmarshal document.xml: %v", err)
-			}
-
-			if debugFlag {
-				fmt.Printf("\n%v\n", doc)
 			}
 
 			for _, p := range doc.Body.Paragraphs {

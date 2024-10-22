@@ -61,7 +61,8 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 
 	// do the actual processing
 	cd := newCustDecoder(documentContent, replace)
-	cd.processBody()
+	cd.processParagraphs()
+	cd.debug("Finished processing ...")
 	modifiedXML, err := cd.result()
 	if err != nil {
 		return fmt.Errorf("failed to process document.xml: %v", err)
@@ -90,29 +91,29 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 }
 
 type custDecoder struct {
-	dec       *xml.Decoder
-	input     []byte   // initial doc content, unchanged
-	res       [][]byte // result afeter processing
-	replace   Replacer // replacer function
-	lastSaved int64    // index of last saved byte, index from input byte slice
-	err       error    // last error
-	firstRun  int      // contains index of first run content
-	rcontent  []byte   // agrregated text content of all runs from the same paragraph
-	curPara   int      // index of the res element where the current paragraph starts. Used to destroy paragraph upon request.
+	dec          *xml.Decoder
+	input        []byte   // initial doc content, unchanged
+	res          [][]byte // result afeter processing
+	replace      Replacer // replacer function
+	lastSaved    int64    // index of last saved byte, index from input byte slice
+	err          error    // last error
+	rcontent     []byte   // agrregated text content of all runs from the same paragraph
+	curPara      int      // index of the the current paragraph start within res. Used to destroy entire paragraph upon request.
+	firstRunText int      // contains res index of first run text placeholder
 
 }
 
 func newCustDecoder(documentContent []byte, replacer Replacer) *custDecoder {
 	return &custDecoder{
-		input:     documentContent,
-		dec:       xml.NewDecoder(bytes.NewReader(documentContent)),
-		res:       make([][]byte, 1, 200), // ensure starts with empty string ...
-		replace:   replacer,
-		lastSaved: -1,
-		err:       nil,
-		firstRun:  -1,
-		rcontent:  nil,
-		curPara:   -1,
+		input:        documentContent,
+		dec:          xml.NewDecoder(bytes.NewReader(documentContent)),
+		res:          make([][]byte, 1, 200), // ensure starts with empty string ...
+		replace:      replacer,
+		lastSaved:    -1,
+		err:          nil,
+		firstRunText: -1,
+		rcontent:     nil,
+		curPara:      -1,
 	}
 }
 
@@ -126,168 +127,105 @@ func (cd *custDecoder) result() ([]byte, error) {
 
 // Copy the newly parsed content of the original docx to the result up to the last token parsed, included.
 func (cd *custDecoder) copy() {
-	last := cd.dec.InputOffset()
-	if last <= cd.lastSaved+1 {
-		return
-	}
-	cd.res = append(cd.res, cd.input[cd.lastSaved+1:last])
-	cd.lastSaved = last - 1
-}
-
-// Process the body tags
-func (cd *custDecoder) processBody() {
-	cd.copy()
-	defer cd.copy()
-	var tok xml.Token
-	for cd.err == nil {
-		tok, cd.err = cd.dec.Token()
-		if cd.err != nil {
-			if cd.err == io.EOF { // normal exit
-				cd.err = nil
-			}
-			break // in all case, stop and return err !
-		}
-		switch t := tok.(type) {
-		default:
-		case xml.StartElement:
-			if t.Name.Local == "body" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :%s\n", t.Name.Local)
-				cd.copy()
-				cd.processParagraphs()
-			}
-		}
-
+	if next := cd.dec.InputOffset(); cd.lastSaved+1 < next { // next points to the start of the next token never parsed ...
+		cd.res = append(cd.res, cd.input[cd.lastSaved+1:next])
+		cd.lastSaved = next - 1
 	}
 }
 
-// process paragraphs
+// look for paragraphs
 func (cd *custDecoder) processParagraphs() {
 
-	defer cd.copy()
 	var tok xml.Token
-	for cd.err == nil {
-		cd.copy()
-		tok, cd.err = cd.dec.Token()
-		if cd.err != nil {
-			break // in all case, stop and return err - EOF is abnormal in this case.
-		}
-		cd.copy() // ensure copy before a new paragraph start, that could be later discared
+
+	for tok, cd.err = cd.dec.Token(); cd.err == nil; tok, cd.err = cd.dec.Token() {
+		cd.copy() // immediately copy token in a separate res element
 		switch t := tok.(type) {
-		default:
 		case xml.StartElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :%s\n", t.Name.Local)
-				cd.curPara = len(cd.res) // used to truncate later the current paragraph if so desired
-				cd.copy()                // save the <p> tag.
+				cd.debug("found <p>")
+				cd.curPara = len(cd.res) - 1 // mark para start, used to truncate later the current paragraph if so desired
 				cd.processRuns()
-			}
-		case xml.EndElement:
-			if t.Name.Local == "body" && t.Name.Space == NAMESPACE {
-				return
 			}
 		}
 	}
+
+	if cd.err == io.EOF { // ignore EOF, it's a normal ending here.
+		cd.err = nil
+	}
 }
 
-// process runs
+// process runs, until end of paragraph
+// starts with para on top of res.
 func (cd *custDecoder) processRuns() {
-	cd.copy()
-	defer cd.copy()
+
 	var tok xml.Token
+
+	// reset run text capture, since we are starting a new paragraph ...
 	cd.rcontent = nil
-	cd.firstRun = -1
+	cd.firstRunText = -1
 
-	for cd.err == nil {
-		tok, cd.err = cd.dec.Token()
-		if cd.err != nil {
-			break // in all case, stop and return err - EOF is abnormal in this case.
-		}
-
+	for tok, cd.err = cd.dec.Token(); cd.err == nil; tok, cd.err = cd.dec.Token() {
+		cd.copy() // immediately copy current element
 		switch t := tok.(type) {
-		default:
 		case xml.StartElement:
 			if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :%s\n", t.Name.Local)
-				cd.copy()
 				cd.processText()
 			}
 		case xml.EndElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :/%s\n", t.Name.Local)
-				if cd.firstRun >= 0 {
+				if cd.firstRunText >= 0 { // make sure we saw at least a run !
 					ns, discard := cd.replace((string)(cd.rcontent))
 					if discard {
-						cd.res = cd.res[:cd.curPara] // destroy the paragraph
-						cd.lastSaved = cd.dec.InputOffset()
+						cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
+						cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the following tag
 					} else {
-						cd.res[cd.firstRun] = []byte(ns) // save agg content to first run
-						// fmt.Println("saving rcontent to index ", cd.firstRun)
+						cd.res[cd.firstRunText] = []byte(ns) // save agg content to first run
 					}
 				}
-				cd.rcontent = nil
-				cd.firstRun = -1
-				// fmt.Printf("Res : %s\n", cd.res)
 				return
 			}
 		}
 	}
 }
 
+// process text within a run, until end of run
 func (cd *custDecoder) processText() {
-	cd.copy()
-	defer cd.copy()
 	var tok xml.Token
-	for cd.err == nil {
-		tok, cd.err = cd.dec.Token()
-		if cd.err != nil {
-			break // in all case, stop and return err - EOF is abnormal in this case.
-		}
-
+	for tok, cd.err = cd.dec.Token(); cd.err == nil; tok, cd.err = cd.dec.Token() {
+		cd.copy() // copy captured element
 		switch t := tok.(type) {
-		default:
 		case xml.StartElement:
 			if t.Name.Local == "t" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :%s\n", t.Name.Local)
-				cd.copy()
-				if cd.firstRun < 0 {
-					cd.res = append(cd.res, []byte{}) // place holder for future aggregated text
-					cd.firstRun = len(cd.res) - 1     // remember index of place holder !
+				if cd.firstRunText < 0 { // no run was seen in this paragraph yet, prepare this run for saving aggregated text.
+					cd.res = append(cd.res, []byte{}) // add empty place holder for future aggregated text
+					cd.firstRunText = len(cd.res) - 1 // remember index of empty place holder !
 				}
 				cd.processTextContent()
 			}
 		case xml.EndElement:
 			if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
-				//fmt.Printf("Captured :/%s\n", t.Name.Local)
 				return
 			}
-
 		}
 	}
 }
 
+// process text. We just read the <t> tag ...
 func (cd *custDecoder) processTextContent() {
-	cd.copy()
-	defer cd.copy()
 	var tok xml.Token
-	for cd.err == nil {
-		cd.copy() // ensure copy is up to date before text is read/discarded.
-		tok, cd.err = cd.dec.Token()
-		if cd.err != nil {
-			break // in all case, stop and return err - EOF is abnormal in this case.
-		}
-
+	for tok, cd.err = cd.dec.Token(); cd.err == nil; tok, cd.err = cd.dec.Token() {
 		switch t := tok.(type) {
-		default:
-			cd.copy()
-		case xml.CharData:
+		case xml.CharData: // that will not be copied, only aggregated, to be saved later in the placeholder.
 			cd.rcontent = append(cd.rcontent, t...)
-			//fmt.Printf("\t -> %s\n", (string)(cd.rcontent))
-			// skip copy of chardata, assuming the rest was already copied
 			cd.lastSaved = cd.dec.InputOffset() - 1
 		case xml.EndElement:
+			cd.copy() // copy the end tag, whatever it is
 			if t.Name.Local == "t" && t.Name.Space == NAMESPACE {
 				return
 			}
+		default:
+			cd.copy() // by default, we copy everything, except chardata !
 		}
 	}
 }
