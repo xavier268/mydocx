@@ -2,21 +2,57 @@
 [![GoDoc reference example](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/xavier268/mydocx)
 
 # mydocx
-Extract or Transform text content within a word document. Pure go, no external dependencies, no licensing fees.
+
+A pure Go library to extract and transform text content within Word documents, with no external dependencies or licensing fees.
 
 ## Features
 
-* **Extract** paragraph text without modifying original word file
-* **Replace** paragraph text using a *Replacer* to transform paragraph content. A go template based *Replacer* is provided, but you may design your own.
+* **Text Extraction**: Extract text from multiple document locations:
+  - Main document body
+  - Headers and footers
+  - Table cells
+* **Content Organization**: Retrieve text organized by paragraphs while preserving the original Word file
+* **Text Transformation**: Replace text content using customizable `Replacer` interfaces
+  - Includes a built-in Go template-based `Replacer`
+  - Support for custom `Replacer` implementations
 
-## Paragraphs
+## Working with Paragraphs
 
-This library is designed to manage text within a paragraph, from a word docx model. **It cannot create new paragraphs.**
+### Limitations
 
-The template engine **CANNOT** be used across paragraph boundaries. You may **NOT** start an *{{if ...}}* in one paragraph and the balancing *{{end}}* in the next paragraph.
+* New paragraphs cannot be created
+* Existing paragraphs can be programmatically discarded (see test files for examples)
 
-However, the Replacer **CAN**  programatically request the suppression of its containing paragraph (useful if some paragraph only occur in certain cases, but you don't want empty lines).
+### Template Engine Constraints
 
-## Examples
+The template engine has specific boundary limitations:
+* Template directives **cannot** span across paragraph boundaries
+* Example of invalid usage:
+  ```
+  Paragraph 1: {{if condition}}
+  Paragraph 2: {{end}}
+  ```
 
-See the *testFiles* directory.
+## Technical Details
+
+### Run Management
+
+Special consideration has been given to Word's internal text structure:
+
+* Text is internally split across multiple "runs"
+* To handle this complexity, the library:
+  1. Collects text pieces from various runs
+  2. Consolidates them into the first run
+  3. Maintains empty subsequent runs for structural integrity
+
+### Formatting Behavior
+
+Due to the run consolidation process:
+* The resulting paragraph will have uniform text formatting
+* The formatting is inherited from the style applied to the beginning of the paragraph
+
+## Usage Notes
+
+* When implementing custom text transformations, consider the single-format limitation
+* Refer to test files for comprehensive examples of paragraph manipulation
+* The library maintains document structure while allowing powerful text modifications
