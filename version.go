@@ -2,15 +2,15 @@ package mydocx
 
 import "regexp"
 
-// v0.1.1		first functionnal version
-// v0.1.2		code cleanup, API simplification
-// v0.1.3		use golang templates (optionnal)
-// v0.1.4		programmatically remove paragraphs, based on their content
-// v0.1.5		cleanup code, doc
-// v0.1.6		reduced public API, hiding simplified xml structure.
-// v0.1.7       redesign modify parsing for footer/header templating. Escape text replaced.
-// v0.1.8       redesign extract parsing for simplicity and robustness. Extends to footer/header. Remove internal package.
-// v0.1.9       change replacer interface to access container name
+// v0.1.1 first functionnal version
+// v0.1.2 code cleanup, API simplification
+// v0.1.3 use golang templates (optionnal)
+// v0.1.4 programmatically remove paragraphs, based on their content
+// v0.1.5 cleanup code, doc
+// v0.1.6 reduced public API, hiding simplified xml structure.
+// v0.1.7 redesign modify parsing for footer/header templating. Escape text replaced.
+// v0.1.8 redesign extract parsing for simplicity and robustness. Extends to footer/header. Remove internal package.
+// v0.1.9 change replacer interface to access container name
 
 const NAME = "mydocx"
 
