@@ -7,10 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"regexp"
 )
-
-const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 
 // A replacer replaces a string with a modified string.
 // It provides a flag that can trigger the removal of the entire paragraph.
@@ -49,10 +46,9 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 
 	// Locate the document.xml and headers/footers files
 	var documentContent []byte
-	patt := regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]\.xml)|(word/header[0-9]\.xml)$`)
 	for _, file := range docxFile.File {
 		fname := file.Name
-		if patt.MatchString(fname) {
+		if containerPattern.MatchString(fname) {
 			if VERBOSE {
 				fmt.Println("Processing", fname)
 			}

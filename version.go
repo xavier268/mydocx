@@ -1,16 +1,19 @@
 package mydocx
 
+import "regexp"
+
 // v0.1.1		first functionnal version
 // v0.1.2		code cleanup, API simplification
 // v0.1.3		use golang templates (optionnal)
 // v0.1.4		programmatically remove paragraphs, based on their content
 // v0.1.5		cleanup code, doc
 // v0.1.6		reduced public API, hiding simplified xml structure.
-// v0.1.7       redesign parsing for footer/header templating. Escape text replaced.
+// v0.1.7       redesign modify parsing for footer/header templating. Escape text replaced.
+// v0.1.8       redesign extract parsing for simplicity and robustness. Extends to footer/header. Remove internal package.
 
 const NAME = "mydocx"
 
-const VERSION = "0.1.7"
+const VERSION = "0.1.8"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 
@@ -19,3 +22,7 @@ var VERBOSE = false
 
 // set to true for detailled debugging information
 var debugflag = false
+
+const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+var containerPattern = regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]+\.xml)|(word/header[0-9]+\.xml)$`)

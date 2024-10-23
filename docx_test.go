@@ -13,10 +13,10 @@ var target3 string = filepath.Join("testFiles", "test-modified-tpl3.docx")
 var target4 string = filepath.Join("testFiles", "test-modified-tpl4.docx")
 
 func init() {
-	VERBOSE = true
+	VERBOSE = false
 	debugflag = false
 }
-func TestDocExtract(t *testing.T) {
+func TestDocExtract0(t *testing.T) {
 
 	pp, err := ExtractText(source)
 	if err != nil {
@@ -24,8 +24,11 @@ func TestDocExtract(t *testing.T) {
 		t.Fatal(err)
 	}
 	fmt.Println()
-	for i, p := range pp {
-		fmt.Printf("%d: %q\n", i, p)
+	for k, v := range pp {
+		fmt.Printf("=== %q ===\n", k)
+		for i, p := range v {
+			fmt.Printf("%d: %q\n", i, p)
+		}
 	}
 
 }
