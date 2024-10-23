@@ -1,6 +1,9 @@
 package mydocx
 
 import (
+	"bytes"
+	"encoding/xml"
+	"fmt"
 	"strings"
 	"text/template"
 )
@@ -19,10 +22,11 @@ func NewTplReplacer(content any) Replacer {
 
 		var res = new(strings.Builder)
 
-		tpl := template.Must(template.New("docx").Parse(para))
+		tpl := template.Must(template.New(NAME).Parse(para))
 		err := tpl.Execute(res, content)
 		if err != nil {
-			return para + " ***ERROR*** " + err.Error(), false
+			mess := para + " ***ERROR*** " + err.Error()
+			return mess, false
 		}
 		rs := res.String()
 		return rs, rs == "" // discard if result string is empty string.
@@ -41,8 +45,19 @@ func NewTplReplacerNoDiscard(content any) Replacer {
 		tpl := template.Must(template.New("docx").Parse(para))
 		err := tpl.Execute(res, content)
 		if err != nil {
-			return para + " ***ERROR*** " + err.Error(), false
+			mess := para + " ***ERROR*** " + err.Error()
+			return mess, false
 		}
 		return res.String(), false
 	}
+}
+
+// Escape text for inclusion in xml
+func xmlEscape(source []byte) []byte {
+	escmess := new(bytes.Buffer)
+	if err := xml.EscapeText(escmess, source); err != nil {
+		fmt.Println(err)
+		panic("cannot escape  : " + err.Error())
+	}
+	return escmess.Bytes()
 }

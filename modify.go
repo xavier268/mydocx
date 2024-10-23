@@ -187,6 +187,7 @@ func (cd *custDecoder) processRuns() {
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
 				if cd.firstRunText >= 0 { // make sure we saw at least a run !
 					ns, discard := cd.replace((string)(cd.rcontent))
+					ns = (string)(xmlEscape([]byte(ns)))
 					if discard {
 						cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
 						cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the following tag
