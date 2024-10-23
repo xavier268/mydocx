@@ -24,6 +24,13 @@ type Replacer func(original string) (replaced string, discard bool)
 // If the targetFile name is empty, the sourceFile will be used, modification will be done in place.
 func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) error {
 
+	if targetFilePath == "" {
+		targetFilePath = sourceFilePath
+	}
+	if VERBOSE {
+		fmt.Println("Modifying : ", sourceFilePath, "-->", targetFilePath)
+	}
+
 	// Open the .docx (which is a zip file)
 	docxFile, err := zip.OpenReader(sourceFilePath)
 	if err != nil {
@@ -46,7 +53,9 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 	for _, file := range docxFile.File {
 		fname := file.Name
 		if patt.MatchString(fname) {
-			fmt.Println("Processing", fname)
+			if VERBOSE {
+				fmt.Println("Processing", fname)
+			}
 			documentContent, err = readFile(file)
 			if err != nil {
 				return fmt.Errorf("failed to read document.xml: %v", err)
@@ -69,9 +78,6 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 	}
 
 	// Save the modified .docx
-	if targetFilePath == "" {
-		targetFilePath = sourceFilePath
-	}
 	return os.WriteFile(targetFilePath, buffer.Bytes(), 0644)
 }
 
@@ -84,7 +90,9 @@ func processContent(filename string, documentContent []byte, replace Replacer, z
 
 	cd := newCustDecoder(documentContent, replace)
 	cd.processParagraphs()
-	cd.debug("Finished processing ...", filename)
+	if VERBOSE {
+		cd.debug("Finished processing ...", filename)
+	}
 	modifiedXML, err := cd.result()
 	if err != nil {
 		return fmt.Errorf("failed to process %s: %v", filename, err)

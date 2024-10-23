@@ -26,6 +26,9 @@ func NewTplReplacer(content any) Replacer {
 		err := tpl.Execute(res, content)
 		if err != nil {
 			mess := para + " ***ERROR*** " + err.Error()
+			if VERBOSE {
+				fmt.Println(mess)
+			}
 			return mess, false
 		}
 		rs := res.String()
@@ -46,17 +49,20 @@ func NewTplReplacerNoDiscard(content any) Replacer {
 		err := tpl.Execute(res, content)
 		if err != nil {
 			mess := para + " ***ERROR*** " + err.Error()
+			if VERBOSE {
+				fmt.Println(mess)
+			}
 			return mess, false
 		}
 		return res.String(), false
 	}
 }
 
-// Escape text for inclusion in xml
+// Escape text for inclusion in xml.
+// Panic on error - should never happen ;-)
 func xmlEscape(source []byte) []byte {
 	escmess := new(bytes.Buffer)
 	if err := xml.EscapeText(escmess, source); err != nil {
-		fmt.Println(err)
 		panic("cannot escape  : " + err.Error())
 	}
 	return escmess.Bytes()

@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"encoding/xml"
 	"fmt"
-	"io"
 
 	"github.com/xavier268/mydocx/internal/openxml"
 )
@@ -44,32 +43,4 @@ func ExtractText(sourceFilePath string) ([]string, error) {
 	}
 
 	return paragraphs, nil
-}
-
-// Helper function to read a file from a zip archive
-func readFile(f *zip.File) ([]byte, error) {
-	rc, err := f.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-
-	return io.ReadAll(rc)
-}
-
-// Helper function to copy unmodified files to the new zip
-func copyFileToZip(zipWriter *zip.Writer, file *zip.File) error {
-	readCloser, err := file.Open()
-	if err != nil {
-		return err
-	}
-	defer readCloser.Close()
-
-	writer, err := zipWriter.Create(file.Name)
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(writer, readCloser)
-	return err
 }

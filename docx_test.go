@@ -13,7 +13,8 @@ var target3 string = filepath.Join("testFiles", "test-modified-tpl3.docx")
 var target4 string = filepath.Join("testFiles", "test-modified-tpl4.docx")
 
 func init() {
-	// debugFlag = true
+	VERBOSE = true
+	debugflag = false
 }
 func TestDocExtract(t *testing.T) {
 
