@@ -15,8 +15,13 @@ A pure Go library to extract and transform text content within Word documents, w
 * **Text Transformation**: Replace text content using customizable `Replacer` interfaces
   - Includes a built-in Go template-based `Replacer`
   - Support for custom `Replacer` implementations
+* MIT Licence
 
 ## Working with Paragraphs
+
+### Replacer
+
+* `Replacer` takes the type of container and the original string as input, and returns a replacement string and a flag to request paragraph removal. This allows to handle differently the main document or the header/footer.
 
 ### Limitations
 
@@ -39,7 +44,7 @@ The template engine has specific boundary limitations:
 
 Special consideration has been given to Word's internal text structure:
 
-* Text is internally split across multiple "runs"
+* In a word document, text is internally split across multiple "runs"
 * To handle this complexity, the library:
   1. Collects text pieces from various runs
   2. Consolidates them into the first run

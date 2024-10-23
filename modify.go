@@ -9,10 +9,11 @@ import (
 	"os"
 )
 
-// A replacer replaces a string with a modified string.
-// It provides a flag that can trigger the removal of the entire paragraph.
+// A replacer replaces a string with a modified string. It is provide the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
+// Only documents, headers and footers will be submitted.
+// It returns a flag that can trigger the removal of the entire paragraph.
 // You may design your own Replacer, without relying on the go template engine (or using another one).
-type Replacer func(original string) (replaced string, discard bool)
+type Replacer func(container string, original string) (replaced string, discard bool)
 
 // All text from the sourceFile is modified by applying the replace function to it.
 // Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
@@ -35,9 +36,9 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 	}
 	defer docxFile.Close()
 
-	// default replace function
+	// default replace function, no change.
 	if replace == nil {
-		replace = func(s string) (string, bool) { return s, false }
+		replace = func(_, s string) (string, bool) { return s, false }
 	}
 
 	// Prepare a buffer to store the modified .docx content
@@ -85,6 +86,7 @@ func processContent(filename string, documentContent []byte, replace Replacer, z
 	}
 
 	cd := newCustDecoder(documentContent, replace)
+	cd.container = filename
 	cd.processParagraphs()
 	if VERBOSE {
 		cd.debug("Finished processing ...", filename)
@@ -109,6 +111,7 @@ func processContent(filename string, documentContent []byte, replace Replacer, z
 type custDecoder struct {
 	dec          *xml.Decoder
 	input        []byte   // initial doc content, unchanged
+	container    string   // current container being processed ("word/document.xm", "word/footer1.xml", ...)
 	res          [][]byte // result afeter processing
 	replace      Replacer // replacer function
 	lastSaved    int64    // index of last saved byte, index from input byte slice
@@ -190,7 +193,7 @@ func (cd *custDecoder) processRuns() {
 		case xml.EndElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
 				if cd.firstRunText >= 0 { // make sure we saw at least a run !
-					ns, discard := cd.replace((string)(cd.rcontent))
+					ns, discard := cd.replace(cd.container, (string)(cd.rcontent))
 					ns = (string)(xmlEscape([]byte(ns)))
 					if discard {
 						cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>

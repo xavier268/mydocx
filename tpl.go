@@ -10,11 +10,11 @@ import (
 
 // Assume the source word document contains valid template in each paragraph
 // (CAUTION template logic cannot extend beyond paragraph boundaries !)
-// NewTplReplacer creates a replacer that will apply the provided content struct to the template in each paragraph.
+// NewTplReplacer creates a replacer that will apply the provided content struct to the template in each paragraph. Container is ignored.
 // By default, this Replacer will discard the entire paragraph if it was not initailly empty but becomes empty when executing the template.
 // If an error occurs during template conversion, the text of the error is returned, together with the original text that triggered the error.
 func NewTplReplacer(content any) Replacer {
-	return func(para string) (string, bool) {
+	return func(_ string, para string) (string, bool) {
 
 		if para == "" {
 			return "", true // leave epty original paragraph untouched.
@@ -38,7 +38,7 @@ func NewTplReplacer(content any) Replacer {
 
 // same as NewTplReplacer but will never discard empty paragraphs.
 func NewTplReplacerNoDiscard(content any) Replacer {
-	return func(para string) (string, bool) {
+	return func(_ string, para string) (string, bool) {
 
 		if para == "" {
 			return "", true // leave epty original paragraph untouched.
