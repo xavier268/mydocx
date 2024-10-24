@@ -1,6 +1,6 @@
 
 [![GoDoc reference example](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/xavier268/mydocx)
-
+[![Go Report Card](https://goreportcard.com/badge/github.com/xavier268/mydocx)](https://goreportcard.com/report/github.com/xavier268/mydocx)
 # mydocx
 
 A pure Go library to extract and transform text content within Word documents, with no external dependencies or licensing fees.
