@@ -11,10 +11,11 @@ import "regexp"
 // v0.1.7 redesign modify parsing for footer/header templating. Escape text replaced.
 // v0.1.8 redesign extract parsing for simplicity and robustness. Extends to footer/header. Remove internal package.
 // v0.1.9 change replacer interface to access container name
+// v0.1.10 typos, readme, documentation ...
 
 const NAME = "mydocx"
 
-const VERSION = "0.1.9"
+const VERSION = "0.1.10"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 
