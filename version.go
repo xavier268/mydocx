@@ -2,7 +2,7 @@ package mydocx
 
 import "regexp"
 
-// v0.1.1 first functionnal version
+// v0.1.1 first functional version
 // v0.1.2 code cleanup, API simplification
 // v0.1.3 use golang templates (optionnal)
 // v0.1.4 programmatically remove paragraphs, based on their content
@@ -21,7 +21,7 @@ const COPYRIGHT = "(c) Xavier Gandillot 2024"
 // if true, verbose information will be printed to stdout
 var VERBOSE = false
 
-// set to true for detailled debugging information
+// set to true for detailed debugging information
 var debugflag = false
 
 const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"

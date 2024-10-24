@@ -17,7 +17,7 @@ type Replacer func(container string, original string) (replaced string, discard 
 
 // All text from the sourceFile is modified by applying the replace function to it.
 // Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
-// Replace function is called paragraph by paragraph. No special assupmtion is made for empty paragraph.
+// Replace function is called paragraph by paragraph. No special assumption is made for empty paragraph.
 // If the replace function is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing internal paragraph formatting !).
 // If the targetFile name is empty, the sourceFile will be used, modification will be done in place.
 func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) error {
