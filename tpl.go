@@ -22,10 +22,10 @@ func NewTplReplacer(content any) Replacer {
 
 		var res = new(strings.Builder)
 
-		tpl := template.Must(template.New(NAME).Parse(para))
+		tpl := template.Must(template.New(NAME + "_template").Parse(para))
 		err := tpl.Execute(res, content)
 		if err != nil {
-			mess := para + " ***ERROR*** " + err.Error()
+			mess := fmt.Sprintf("%s $$$$$$ ERROR : %v $$$$$$", para, err)
 			if VERBOSE {
 				fmt.Println(mess)
 			}
