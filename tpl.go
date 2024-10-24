@@ -38,23 +38,10 @@ func NewTplReplacer(content any) Replacer {
 
 // same as NewTplReplacer but will never discard empty paragraphs.
 func NewTplReplacerNoDiscard(content any) Replacer {
-	return func(_ string, para string) (string, bool) {
-
-		if para == "" {
-			return "", true // leave epty original paragraph untouched.
-		}
-		var res = new(strings.Builder)
-
-		tpl := template.Must(template.New("docx").Parse(para))
-		err := tpl.Execute(res, content)
-		if err != nil {
-			mess := para + " ***ERROR*** " + err.Error()
-			if VERBOSE {
-				fmt.Println(mess)
-			}
-			return mess, false
-		}
-		return res.String(), false
+	rep := NewTplReplacer(content)
+	return func(container string, para string) (string, bool) {
+		res, _ := rep(container, para)
+		return res, false
 	}
 }
 
