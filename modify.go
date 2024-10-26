@@ -204,7 +204,7 @@ func (cd *custDecoder) processRuns() {
 // Insert provided text in paragraph.
 // If slice is empty, current paragraph is discarded.
 // If slice has more than 1 element, current paragraph is duplicated as needed.
-// When the function is called, an entire paraggraph should be avilable in res.
+// When the function is called, an entire paraggraph should be available in res.
 func (cd *custDecoder) insert(paras []string) {
 	defer cd.debug("after paragragrph insertions")
 	if len(paras) == 0 {
