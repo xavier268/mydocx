@@ -8,6 +8,39 @@ import (
 	"text/template"
 )
 
+// Function map for template
+var functionMap template.FuncMap
+
+// register predefined functions
+func init() {
+
+	// nl takes no argument and retuns "\n"
+	RegisterTplFunction("nl", func() string { return "\n" })
+
+	// version takes no argument are returns versionning information.
+	RegisterTplFunction("version", func() string { return NAME + "-" + VERSION })
+
+	// copyright takes no argument and returns copyright information
+	RegisterTplFunction("copyright", func() string { return COPYRIGHT })
+}
+
+// Register a new function that will be available when parsing templates.
+// Empty names or nil functions are ignored.
+// Each function must have either a single return value, or two return values of which the second has type error.
+// In that case, if the second (error) return value evaluates to non-nil during execution,
+// execution terminates and Execute returns that error.
+func RegisterTplFunction(name string, function any) {
+	if functionMap == nil {
+		functionMap = make(template.FuncMap)
+	}
+	if name != "" || function != nil {
+		if VERBOSE {
+			fmt.Printf("Registering function %s as %T", name, function)
+		}
+		functionMap[name] = function
+	}
+}
+
 // Assume the source word document contains valid go template in each paragraph
 // NewTplReplacer creates a replacer that will apply the provided content struct to the template in each paragraph. Container is ignored.
 // The Replacer will behave as follows :
@@ -25,12 +58,19 @@ func NewTplReplacer(content any) Replacer {
 
 		var res = new(strings.Builder)
 
-		tpl := template.Must(template.New(NAME + "_template").Parse(para))
-		err := tpl.Execute(res, content)
+		tpl, err := template.New(NAME + "_template").Parse(para)
 		if err != nil {
 			errmess = fmt.Sprintf("$$$$$$ ERROR $$$$$ : %v ", err)
 			if VERBOSE {
-				fmt.Println(errmess)
+				fmt.Println(para, errmess)
+			}
+			return []string{para, errmess}
+		}
+		err = tpl.Execute(res, content)
+		if err != nil {
+			errmess = fmt.Sprintf("$$$$$$ ERROR $$$$$ : %v ", err)
+			if VERBOSE {
+				fmt.Println(para, errmess)
 			}
 			return []string{para, errmess}
 		}

@@ -13,7 +13,7 @@ var target3 string = filepath.Join("testFiles", "test-modified-tpl3.docx")
 var target4 string = filepath.Join("testFiles", "test-modified-tpl4.docx")
 
 func init() {
-	VERBOSE = false
+	VERBOSE = true
 	debugflag = false
 }
 func TestDocExtract0(t *testing.T) {
@@ -35,7 +35,8 @@ func TestDocExtract0(t *testing.T) {
 
 func TestDocModify1(t *testing.T) {
 
-	//err := ModifyText(source, strings.ToUpper, target)
+	t.Log(t.Name(), "is using a nil replacer")
+
 	err := ModifyText(source, nil, target1)
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -46,6 +47,7 @@ func TestDocModify1(t *testing.T) {
 
 func TestDocModifyTpl2(t *testing.T) {
 
+	t.Log(t.Name(), "is using a template replacer, with invalid fields")
 	c := struct {
 		Name string
 		Age  int
@@ -64,12 +66,21 @@ func TestDocModifyTpl2(t *testing.T) {
 
 func TestDocModifyTpl3(t *testing.T) {
 
+	t.Log(t.Name(), "is using a template replacer, with valid but empty fields")
 	c := struct {
-		Name string
-		Age  int
+		Bullet string
+		Cell   string
+		Header string
+		Footer string
+		Skip   bool
+		Title  string
 	}{
-		Name: "John Doe",
-		Age:  12,
+		Bullet: "",
+		Cell:   " ", // a known issue : if a template returns "" in a cell, the paragraph is removed, leaving a cell possibly with no pragraph at all, and word will complain (not open office, since the standard accepts that)
+		Header: "",
+		Footer: "",
+		Skip:   false,
+		Title:  "",
 	}
 
 	err := ModifyText(source, NewTplReplacer(c), target3)
@@ -83,12 +94,22 @@ func TestDocModifyTpl3(t *testing.T) {
 // This will use in paragraph formating and special chars
 func TestDocModifyTpl4(t *testing.T) {
 
+	t.Log(t.Name(), "is using a template replacer, with valid non empty fields")
+
 	c := struct {
-		Name string
-		Age  int
+		Bullet string
+		Cell   string
+		Header string
+		Footer string
+		Skip   bool
+		Title  string
 	}{
-		Name: "John\n\r\tDoe>>><<", // \n\r will be treated as space, < and > will be correctly escaped.
-		Age:  12,
+		Bullet: "bullet content",
+		Cell:   "cell content",
+		Header: "heeaaaddderrr",
+		Footer: "fooooottter",
+		Skip:   true,
+		Title:  "MY BIG TITLE",
 	}
 	err := ModifyText(source, NewTplReplacer(c), target4)
 	if err != nil {
