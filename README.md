@@ -1,64 +1,197 @@
+# Go DOCX Text Processor
+
+A powerful Go library for extracting and manipulating text in Microsoft Word (DOCX) files, with zero external dependencies. Transform your documents using Go templates or custom replacers while maintaining document structure.
 
 [![GoDoc reference example](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/xavier268/mydocx)
 [![Go Report Card](https://goreportcard.com/badge/github.com/xavier268/mydocx)](https://goreportcard.com/report/github.com/xavier268/mydocx)
-# mydocx
 
-A pure Go library to extract and transform text content within Word documents, with no external dependencies or licensing fees.
+## ✨ Features
 
-## Features
-
-* **Text Extraction**: Extract text from multiple document locations:
+- Text extraction from DOCX files
+- Text modification using Go templates or custom replacers
+- Support for:
   - Main document body
   - Headers and footers
-  - Table cells
-* **Content Organization**: Retrieve text organized by paragraphs while preserving the original Word file
-* **Text Transformation**: Replace text content using customizable `Replacer` interfaces
-  - Includes a built-in Go template-based `Replacer`
-  - Support for custom `Replacer` implementations
-* MIT Licence
+  - Tables and cells
+  - Bullet points and numbered lists
+- Zero external dependencies
+- MIT License
 
-## Working with Paragraphs
+## 🚀 Installation
 
-### Replacer
+```bash
+go get github.com/xavier268/mydocx
+```
 
-* `Replacer` takes the type of container and the original string as input, and returns a replacement string and a flag to request paragraph removal. This allows to handle differently the main document or the header/footer.
+## 📖 Quick Start
 
-### Limitations
+### Text Extraction
 
-* New paragraphs cannot be created
-* Existing paragraphs can be programmatically discarded (see test files for examples)
+```go
+import "github.com/xavier268/mydocx"
 
-### Template Engine Constraints
+func main() {
+    // Extract text from all document parts (main body, headers, footers)
+    content, err := mydocx.ExtractText("document.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
 
-The template engine has specific boundary limitations:
-* Uses syntax defined in https://pkg.go.dev/text/template@latest
-* Template directives **cannot** span across paragraph boundaries
-* Example of invalid usage:
-  ```
-  Paragraph 1: {{if condition}}
-  Paragraph 2: {{end}}
-  ```
+    // content is a map[string][]string where:
+    // - key is the container name (e.g., "word/document.xml", "word/footer1.xml")
+    // - value is a slice of strings, one for each paragraph
+    for container, paragraphs := range content {
+        fmt.Printf("Content from %s:\n", container)
+        for _, para := range paragraphs {
+            fmt.Println(para)
+        }
+    }
+}
+```
 
-## Technical Details
+### Using Go Templates
 
-### Run Management
+```go
+import "github.com/xavier268/mydocx"
 
-Special consideration has been given to Word's internal text structure:
+func main() {
+    // Define template data
+    data := struct {
+        Name    string
+        Company string
+        Date    string
+    }{
+        Name:    "John Doe",
+        Company: "ACME Corp",
+        Date:    time.Now().Format("2006-01-02"),
+    }
 
-* In a word document, text is internally split across multiple "runs"
-* To handle this complexity, the library:
-  1. Collects text pieces from various runs
-  2. Consolidates them into the first run
-  3. Maintains empty subsequent runs for structural integrity
+    // Create a template-based replacer
+    replacer := mydocx.NewTplReplacer(data)
 
-### Formatting Behavior
+    // Modify the document
+    err := mydocx.ModifyText("template.docx", replacer, "output.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
+}
+```
 
-Due to the run consolidation process:
-* The resulting paragraph will have uniform text formatting
-* The formatting is inherited from the style applied to the beginning of the paragraph
+### Custom Replacer
 
-## Usage Notes
+```go
+// Define your custom replacer
+func myReplacer(container, text string) []string {
+    // container: "word/document.xml", "word/footer1.xml", etc.
+    // text: original paragraph text
+    // Return:
+    // - empty slice to remove the paragraph
+    // - slice with multiple strings to create multiple paragraphs
+    // - slice with one string to replace paragraph content
+    
+    switch {
+    case strings.Contains(text, "DELETE"):
+        return []string{} // Remove paragraph
+    case strings.Contains(text, "DUPLICATE"):
+        return []string{text, text} // Duplicate paragraph
+    default:
+        return []string{strings.ToUpper(text)} // Convert to uppercase
+    }
+}
 
-* When implementing custom text transformations, consider the single-format limitation
-* Refer to test files for comprehensive examples of paragraph manipulation
-* The library maintains document structure while allowing powerful text modifications
+// Use your replacer
+err := mydocx.ModifyText("input.docx", myReplacer, "output.docx")
+```
+
+## 🔧 Advanced Features
+
+### Template Functions
+
+#### Built-in Functions
+- `{{nl}}` - Inserts a new paragraph
+- `{{version}}` - Returns version information
+- `{{copyright}}` - Returns copyright text
+
+#### Register Custom Functions
+
+```go
+// Register a custom function
+mydocx.RegisterTplFunction("upper", strings.ToUpper)
+
+// Use in template
+// {{upper .Name}}
+```
+
+### Template Guidelines
+
+1. Each paragraph is an independent template
+2. Templates cannot span across paragraphs
+3. Valid example:
+   ```
+   Hello {{.Name}}!
+   Your order #{{.OrderID}} has been processed.
+   ```
+
+4. Invalid example:
+   ```
+   Hello {{if .Premium}}
+   Premium customer {{.Name}}!
+   {{else}}
+   Valued customer {{.Name}}!
+   {{end}}
+   ```
+
+## ⚙️ Technical Details
+
+### Word Run Management
+
+Microsoft Word splits text into "runs" - segments sharing the same formatting. This creates challenges for text replacement:
+
+```
+Example: "Hello {{.Name}}!" might be split into:
+Run 1: "Hello "
+Run 2: "{{.Name"
+Run 3: "}}!"
+```
+
+Our solution:
+1. Consolidates all runs in a paragraph into the first run
+2. Processes the complete text with a `Replacer`
+3. Creates new paragraphs for each line in the result
+
+⚠️ **Important**: Due to this approach, the entire paragraph will inherit the formatting from its beginning.
+
+### Tables and Lists
+
+- Tables and lists are fully supported
+- Each cell must contain at least one paragraph (even if empty)
+- Word will show an error when opening files with empty cells but can recover
+
+## 🚨 Limitations
+
+1. **Formatting**
+   - Paragraph formatting is unified based on the first run
+   - In-paragraph formatting variations are lost
+
+2. **Template Boundaries**
+   - Templates must be contained within a single paragraph
+   - Cross-paragraph templates are not supported
+
+3. **Table Cells**
+   - Avoid creating completely empty cells
+   - Always include at least one (empty) paragraph in cells
+
+## 📚 Resources
+
+- [Go Template Documentation](https://pkg.go.dev/text/template@latest)
+- [Example Files](./testFiles/)
+- [API Documentation](https://pkg.go.dev/github.com/xavier268/mydocx)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📝 License
+
+MIT License - See LICENSE file for details
+
