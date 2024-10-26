@@ -9,17 +9,17 @@ import (
 	"os"
 )
 
-// A replacer replaces a string with a list modified string. It is provide the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
+// A Replacer replaces a string with a list of modified string. It is provided the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
 // Only documents, headers and footers will be submitted.
-// If the returned slice is empty, the paragraph is removed (unless the REMOVE_EMPTY_PRAGRAPHS flag was unset))
+// If the returned slice is empty, the paragraph is removed (unless the REMOVE_EMPTY_PRAGRAPHS flag was unset)
 // If the returned slice contains more than 1 element, new paragraphs are added, duplicated from the original paragraph.
-// The strings will be xml-escaped later, Replacer should not escape its results.
+// The strings will be xml-escaped later, the Replacer should not escape its results.
 type Replacer func(container string, original string) (replaced []string)
 
-// All text from the sourceFile is modified by applying the replace function to it.
-// Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
-// Replace function is called paragraph by paragraph. No special assumption is made for empty paragraph.
-// If the replace function is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing internal paragraph formatting !).
+// All text from the sourceFile is modified by applying the Replacer.
+// Before calling Replacer, the whole paragraph is collected as a single text, even if split on multiple runs.
+// Replacer is called paragraph by paragraph. It is never called on empty paragraphs.
+// If the Replacer is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing subsequent paragraph formatting ).
 // If the targetFile name is empty, the sourceFile will be used, modification will be done in place.
 func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) error {
 
