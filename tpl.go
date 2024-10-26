@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 	"text/template"
+	"time"
 )
 
 // Function map for template
@@ -22,6 +23,12 @@ func init() {
 
 	// copyright takes no argument and returns copyright information
 	RegisterTplFunction("copyright", func() string { return COPYRIGHT })
+
+	// date takes no argument and returns current date
+	RegisterTplFunction("date", func() string { return time.Now().Format("2006-01-02") })
+
+	// join takes a slice of strings and returns a single string, joined with the provided delimiter
+	RegisterTplFunction("join", func(args []string, delim string) string { return strings.Join(args, "\n") })
 }
 
 // Register a new function that will be available when parsing templates.

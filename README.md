@@ -108,10 +108,14 @@ err := mydocx.ModifyText("input.docx", myReplacer, "output.docx")
 ### Template Functions
 
 #### Built-in Functions
-- All go template functions are available
+
+All go template functions are available. In addition, the following built-in functions are always available :
+
 - `{{nl}}` - Inserts a new paragraph
 - `{{version}}` - Returns version information
 - `{{copyright}}` - Returns copyright text
+- `{{date}}`- Returns the current date, as 2006-02-10
+- `{{join}}` - Expects an array of strings and a delimiter string, returns a single concatenated string with the delimiter (see go function `strings.Join`)
 
 #### Register Custom Functions
 

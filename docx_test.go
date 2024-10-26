@@ -74,13 +74,15 @@ func TestDocModifyTpl3(t *testing.T) {
 		Footer string
 		Skip   bool
 		Title  string
+		List   []string
 	}{
 		Bullet: "",
-		Cell:   " ", // a known issue : if a template returns "" in a cell, the paragraph is removed, leaving a cell possibly with no pragraph at all, and word will complain (not open office, since the standard accepts that)
+		Cell:   " ",
 		Header: "",
 		Footer: "",
 		Skip:   false,
 		Title:  "",
+		List:   []string{},
 	}
 
 	err := ModifyText(source, NewTplReplacer(c), target3)
@@ -103,6 +105,7 @@ func TestDocModifyTpl4(t *testing.T) {
 		Footer string
 		Skip   bool
 		Title  string
+		List   []string
 	}{
 		Bullet: "bullet content",
 		Cell:   "cell content",
@@ -110,6 +113,7 @@ func TestDocModifyTpl4(t *testing.T) {
 		Footer: "fooooottter",
 		Skip:   true,
 		Title:  "MY BIG TITLE",
+		List:   []string{"item 1", "item 2", "item 3", "item 23", "item 99"},
 	}
 	err := ModifyText(source, NewTplReplacer(c), target4)
 	if err != nil {
