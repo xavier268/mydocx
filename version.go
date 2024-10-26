@@ -28,8 +28,9 @@ const (
 var (
 	// if true, verbose information will be printed to stdout
 	VERBOSE = false
-	// If set to true, paragraphs that become empty after replacement are removed (initially empty paragraphs are never removed).
-	// If false, paragraphs that bcome empty are kept.
+	
+	// If set to true, paragraphs that become empty after replacement are removed (paragraphs that were initially empty, before replacement, are never removed).
+	// If false, paragraphs that become empty are kept.
 	// Use the functions {{removeEmpty}}  or {{keepEmpty}} in the source word document to set this value.
 	// You may also set this variable directly from code.
 	// Default is true.
