@@ -141,6 +141,93 @@ mydocx.RegisterTplFunction("upper", strings.ToUpper)
    {{end}}
    ```
 
+## 🔄 Paragraph Management
+
+### With Custom Replacer
+
+The Replacer function controls paragraph creation and removal through its return value:
+
+```go
+type Replacer func(container string, text string) []string
+```
+
+1. **Remove Paragraph**
+   ```go
+   // Return empty slice to remove the paragraph
+   func myReplacer(container, text string) []string {
+       if strings.Contains(text, "DELETE") {
+           return []string{} // Paragraph will be removed
+       }
+       return []string{text}
+   }
+   ```
+
+2. **Create Multiple Paragraphs**
+   ```go
+   // Return multiple strings to create multiple paragraphs
+   func myReplacer(container, text string) []string {
+       if strings.Contains(text, "DUPLICATE") {
+           // Creates three identical paragraphs with the same formatting
+           return []string{text, text, text}
+       }
+       return []string{text}
+   }
+   ```
+
+Each new paragraph inherits the formatting of the original paragraph.
+
+### With Go Templates
+
+When using the template-based replacer (`NewTplReplacer`), paragraph management is controlled by newlines in the template output:
+
+1. **Remove Paragraph**
+   ```
+   {{if .ShouldDelete}}{{else}}Original content{{end}}
+   ```
+   If `.ShouldDelete` is true, the empty output will remove the paragraph.
+
+2. **Create Multiple Paragraphs**
+   ```
+   {{.Title}}
+   Items:
+   {{range .Items}} - {{.}}{{nl}}{{end}}
+   Contact: {{.Contact}}
+   ```
+
+The `{{nl}}` function inserts a newline, and the template output is split on newlines to create new paragraphs. Each resulting paragraph inherits the formatting of the original paragraph. Notice how  {{range}} ... {{end}} fits within a single source paragraph but will create multiple paragraphs !
+
+### Paragraph Creation Rules
+
+1. **Empty Result**
+   - If the Replacer returns an empty slice → paragraph is removed
+   - If a template produces empty output → paragraph is removed
+
+2. **Multiple Paragraphs**
+   - Custom Replacer: Each string in the returned slice becomes a new paragraph
+   - Template: Output is split on newlines (`\n`), each line becomes a new paragraph
+   - All new paragraphs inherit formatting from the original paragraph
+
+3. **Examples with Templates**
+
+   ```
+   // Template in document
+   Dear {{.Name}},{{nl}}
+   {{if .Premium}}Thank you for being a premium member!{{nl}}{{end}}
+   Your balance is ${{.Balance}}.
+   ```
+
+   This template could produce:
+   ```
+   Dear John Doe,
+   Thank you for being a premium member!
+   Your balance is $100.
+   ```
+   Or (if not premium):
+   ```
+   Dear John Doe,
+   Your balance is $100.
+   ```
+
 ## ⚙️ Technical Details
 
 ### Word Run Management
