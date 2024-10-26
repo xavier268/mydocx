@@ -33,9 +33,9 @@ func RegisterTplFunction(name string, function any) {
 	if functionMap == nil {
 		functionMap = make(template.FuncMap)
 	}
-	if name != "" || function != nil {
+	if name != "" && function != nil {
 		if VERBOSE {
-			fmt.Printf("Registering function %s as %T", name, function)
+			fmt.Printf("Registering template function {{%s}} : %T\n", name, function)
 		}
 		functionMap[name] = function
 	}
@@ -58,7 +58,7 @@ func NewTplReplacer(content any) Replacer {
 
 		var res = new(strings.Builder)
 
-		tpl, err := template.New(NAME + "_template").Parse(para)
+		tpl, err := template.New(NAME + "_template").Funcs(functionMap).Parse(para)
 		if err != nil {
 			errmess = fmt.Sprintf("$$$$$$ ERROR $$$$$ : %v ", err)
 			if VERBOSE {

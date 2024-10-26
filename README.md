@@ -31,6 +31,7 @@ A pure Go library to extract and transform text content within Word documents, w
 ### Template Engine Constraints
 
 The template engine has specific boundary limitations:
+* Uses syntax defined in https://pkg.go.dev/text/template@latest
 * Template directives **cannot** span across paragraph boundaries
 * Example of invalid usage:
   ```

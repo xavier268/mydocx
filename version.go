@@ -13,12 +13,13 @@ import "regexp"
 // v0.1.9 change replacer interface to access container name
 // v0.1.10 typos, readme, documentation ...
 // v0.2.0 change Replacer, allow add/destroy paragraphs
+// v0.2.1 add template functions
 
 const DESCRIPTION = "A simple library to modify Microsoft Word .docx documents"
 
 const NAME = "mydocx"
 
-const VERSION = "0.2.0"
+const VERSION = "0.2.1"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 
