@@ -15,7 +15,7 @@ var functionMap template.FuncMap
 // register predefined functions
 func init() {
 
-	// nl takes no argument and retuns "\n"
+	// nl takes no argument and returns "\n"
 	RegisterTplFunction("nl", func() string { return "\n" })
 
 	// version takes no argument are returns versionning information.
