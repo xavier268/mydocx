@@ -108,6 +108,7 @@ err := mydocx.ModifyText("input.docx", myReplacer, "output.docx")
 ### Template Functions
 
 #### Built-in Functions
+- All go template functions are available
 - `{{nl}}` - Inserts a new paragraph
 - `{{version}}` - Returns version information
 - `{{copyright}}` - Returns copyright text
