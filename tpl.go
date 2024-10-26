@@ -8,16 +8,19 @@ import (
 	"text/template"
 )
 
-// Assume the source word document contains valid template in each paragraph
-// (CAUTION template logic cannot extend beyond paragraph boundaries !)
+// Assume the source word document contains valid go template in each paragraph
 // NewTplReplacer creates a replacer that will apply the provided content struct to the template in each paragraph. Container is ignored.
-// By default, this Replacer will discard the entire paragraph if it was not initially empty but becomes empty when executing the template.
-// If an error occurs during template conversion, the text of the error is returned, together with the original text that triggered the error.
+// The Replacer will behave as follows :
+// * If initial paragraph was empty, it is left un changed.
+// * If not empty, template is executed.
+// * If the template execution result is empty, the paragraph is discarded.
+// * If the template execution result is not empty, it is split around \n into lines and each line is added as a separate paragraph. (you may use the function {{nl}} to gererate new lines)
+// * If an error occurs during template execution, an error message is added as the last paragraph of the result.
 func NewTplReplacer(content any) Replacer {
-	return func(_ string, para string) (string, bool) {
-
+	return func(_ string, para string) []string {
+		errmess := ""
 		if para == "" {
-			return "", true // leave epty original paragraph untouched.
+			return []string{""} // leave empty original paragraph untouched.
 		}
 
 		var res = new(strings.Builder)
@@ -25,23 +28,19 @@ func NewTplReplacer(content any) Replacer {
 		tpl := template.Must(template.New(NAME + "_template").Parse(para))
 		err := tpl.Execute(res, content)
 		if err != nil {
-			mess := fmt.Sprintf("%s $$$$$$ ERROR : %v $$$$$$", para, err)
+			errmess = fmt.Sprintf("$$$$$$ ERROR $$$$$ : %v ", err)
 			if VERBOSE {
-				fmt.Println(mess)
+				fmt.Println(errmess)
 			}
-			return mess, false
+			return []string{para, errmess}
 		}
 		rs := res.String()
-		return rs, rs == "" // discard if result string is empty string.
-	}
-}
-
-// same as NewTplReplacer but will never discard empty paragraphs.
-func NewTplReplacerNoDiscard(content any) Replacer {
-	rep := NewTplReplacer(content)
-	return func(container string, para string) (string, bool) {
-		res, _ := rep(container, para)
-		return res, false
+		if rs == "" && errmess == "" {
+			return nil // discard paragraph if result string is empty string and no error message.
+		}
+		// if not empty, split lines
+		rss := strings.Split(rs, "\n")
+		return rss // discard if result string is empty string.
 	}
 }
 

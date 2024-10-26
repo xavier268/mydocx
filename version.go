@@ -12,10 +12,13 @@ import "regexp"
 // v0.1.8 redesign extract parsing for simplicity and robustness. Extends to footer/header. Remove internal package.
 // v0.1.9 change replacer interface to access container name
 // v0.1.10 typos, readme, documentation ...
+// v0.2.0 change Replacer, allow add/destroy paragraphs
+
+const DESCRIPTION = "A simple library to modify Microsoft Word .docx documents"
 
 const NAME = "mydocx"
 
-const VERSION = "0.1.10"
+const VERSION = "0.2.0"
 
 const COPYRIGHT = "(c) Xavier Gandillot 2024"
 

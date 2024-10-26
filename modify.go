@@ -9,11 +9,11 @@ import (
 	"os"
 )
 
-// A replacer replaces a string with a modified string. It is provide the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
+// A replacer replaces a string with a list modified string. It is provide the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
 // Only documents, headers and footers will be submitted.
-// It returns a flag that can trigger the removal of the entire paragraph.
-// You may design your own Replacer, without relying on the go template engine (or using another one).
-type Replacer func(container string, original string) (replaced string, discard bool)
+// If the returned slice is empty, the paragraph is removed.
+// If the returned slice contains more than 1 element, new paragraphs are added, duplicated from the original paragraph.
+type Replacer func(container string, original string) (replaced []string)
 
 // All text from the sourceFile is modified by applying the replace function to it.
 // Before applying the function, the whole paragraph is collected as a single text, even if split on multiple runs.
@@ -38,7 +38,7 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 
 	// default replace function, no change.
 	if replace == nil {
-		replace = func(_, s string) (string, bool) { return s, false }
+		replace = func(_, s string) []string { return []string{s} }
 	}
 
 	// Prepare a buffer to store the modified .docx content
@@ -193,19 +193,36 @@ func (cd *custDecoder) processRuns() {
 		case xml.EndElement:
 			if t.Name.Local == "p" && t.Name.Space == NAMESPACE {
 				if cd.firstRunText >= 0 { // make sure we saw at least a run !
-					ns, discard := cd.replace(cd.container, (string)(cd.rcontent))
-					ns = (string)(xmlEscape([]byte(ns)))
-					if discard {
-						cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
-						cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the following tag
-					} else {
-						cd.res[cd.firstRunText] = []byte(ns) // save agg content to first run
-					}
+					cd.insert(cd.replace(cd.container, (string)(cd.rcontent)))
 				}
 				return
 			}
 		}
 	}
+}
+
+// Insert provided text in paragraph.
+// If slice is empty, current paragraph is discarded.
+// If slice has more than 1 element, current paragraph is duplicated as needed.
+// When the function is called, an entire paraggraph should be avilable in res.
+func (cd *custDecoder) insert(paras []string) {
+	if len(paras) == 0 {
+		cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
+		cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the tag following the paraggraph
+		return
+	}
+	cd.res[cd.firstRunText] = xmlEscape([]byte(paras[0])) // save escapes 1st content to first run
+	if len(paras) == 1 {
+		return // we're done
+	}
+	// else, duplicate paragph
+	dup := cd.res[cd.curPara:]
+	cd.res = append(cd.res, dup...)
+	// update indexes
+	cd.curPara = cd.curPara + len(dup)
+	cd.firstRunText = cd.firstRunText + len(dup)
+	// recurse
+	cd.insert(paras[1:])
 }
 
 // process text within a run, until end of run
