@@ -36,7 +36,7 @@ var (
 	// Default is true.
 	REMOVE_EMPTY_PARAGRAPH bool = true
 
-	// pattrn to select what xml container will be trasformed
+	// pattern to select which xml container will be transformed
 	containerPattern = regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]+\.xml)|(word/header[0-9]+\.xml)$`)
 
 	// set to true for detailed debugging information
