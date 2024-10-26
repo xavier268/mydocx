@@ -15,6 +15,8 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
   - Tables and cells
   - Bullet points and numbered lists
 - Zero external dependencies
+- Efficient (single pass processing)
+- OOXML standard compliant
 - MIT License
 
 ## 🚀 Installation
