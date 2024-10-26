@@ -218,8 +218,8 @@ The `{{nl}}` function inserts a newline, and the template output is split on new
 
    ```
    // Template in document
-   Dear {{.Name}},{{nl}}
-   {{if .Premium}}Thank you for being a premium member!{{nl}}{{end}}
+   Dear {{.Name}},
+   {{if .Premium}}Thank you for being a premium member!{{end}}
    Your balance is ${{.Balance}}.
    ```
 
