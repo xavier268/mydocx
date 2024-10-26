@@ -118,6 +118,8 @@ All go template functions are available. In addition, the following built-in fun
 - `{{copyright}}` - Returns copyright text
 - `{{date}}`- Returns the current date, as 2006-02-10
 - `{{join}}` - Expects an array of strings and a delimiter string, returns a single concatenated string with the delimiter (see go function `strings.Join`)
+- `{{keepEmpty}}` - From this point, will never remove a paragraph that becomes empty after modification.
+- `{{removeEmpty}}`- From this point, non empty paragraphs tat become empty after `Replacer` is applied are removed. **This is the default**.
 
 #### Register Custom Functions
 
@@ -160,7 +162,7 @@ type Replacer func(container string, text string) []string
 
 1. **Remove Paragraph**
    ```go
-   // Return empty slice to remove the paragraph
+   // Return empty slice to remove the paragraph (unless {{keepEmpty}} was called earlier)
    func myReplacer(container, text string) []string {
        if strings.Contains(text, "DELETE") {
            return []string{} // Paragraph will be removed
@@ -191,7 +193,7 @@ When using the template-based replacer (`NewTplReplacer`), paragraph management 
    ```
    {{if .ShouldDelete}}{{else}}Original content{{end}}
    ```
-   If `.ShouldDelete` is true, the empty output will remove the paragraph.
+   If `.ShouldDelete` is true, the empty output will remove the paragraph (unless {{keepEmpty}} was called before).
 
 2. **Create Multiple Paragraphs**
    ```
@@ -205,16 +207,20 @@ The `{{nl}}` function inserts a newline, and the template output is split on new
 
 ### Paragraph Creation Rules
 
-1. **Empty Result**
-   - If the Replacer returns an empty slice → paragraph is removed
-   - If a template produces empty output → paragraph is removed
+1. **Initially empty paragraphs**
+   - Initially empty paragraphs are *always* left unchanged
 
-2. **Multiple Paragraphs**
+2. **Empty Result**
+   - If the Replacer returns an empty slice → paragraph is removed 
+   - If a template produces empty output → paragraph is removed   
+*Note : this is the default, it can be changed with {{keepEmpty}}*
+
+1. **Multiple Paragraphs**
    - Custom Replacer: Each string in the returned slice becomes a new paragraph
    - Template: Output is split on newlines (`\n`), each line becomes a new paragraph
    - All new paragraphs inherit formatting from the original paragraph
 
-3. **Examples with Templates**
+2. **Examples with Templates**
 
    ```
    // Template in document

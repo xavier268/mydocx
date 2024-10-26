@@ -29,6 +29,12 @@ func init() {
 
 	// join takes a slice of strings and returns a single string, joined with the provided delimiter
 	RegisterTplFunction("join", func(args []string, delim string) string { return strings.Join(args, "\n") })
+
+	// allowDiscard will discard empty paragraphs.
+	RegisterTplFunction("removeEmpty", func() string { REMOVE_EMPTY_PARAGRAPH = true; return "" })
+
+	// preventDiscard will always keep empty paragraphs.
+	RegisterTplFunction("keepEmpty", func() string { REMOVE_EMPTY_PARAGRAPH = false; return "" })
 }
 
 // Register a new function that will be available when parsing templates.

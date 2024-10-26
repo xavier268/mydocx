@@ -14,21 +14,30 @@ import "regexp"
 // v0.1.10 typos, readme, documentation ...
 // v0.2.0 change Replacer, allow add/destroy paragraphs
 // v0.2.1 add template functions
+// v0.2.2 add option never to remove paragraphs that become empty
 
-const DESCRIPTION = "A simple library to modify Microsoft Word .docx documents"
+const (
+	AUTHOR      = "Xavier Gandillot"
+	DESCRIPTION = "A simple library to modify Microsoft Word .docx documents with go templates"
+	NAME        = "mydocx"
+	VERSION     = "0.2.2"
+	COPYRIGHT   = "(c) Xavier Gandillot 2024"
+	NAMESPACE   = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+)
 
-const NAME = "mydocx"
+var (
+	// if true, verbose information will be printed to stdout
+	VERBOSE = false
+	// If set to true, paragraphs that become empty after replacement are removed (initially empty paragraphs are never removed).
+	// If false, paragraphs that bcome empty are kept.
+	// Use the functions {{removeEmpty}}  or {{keepEmpty}} in the source word document to set this value.
+	// You may also set this variable directly from code.
+	// Default is true.
+	REMOVE_EMPTY_PARAGRAPH bool = true
 
-const VERSION = "0.2.1"
+	// pattrn to select what xml container will be trasformed
+	containerPattern = regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]+\.xml)|(word/header[0-9]+\.xml)$`)
 
-const COPYRIGHT = "(c) Xavier Gandillot 2024"
-
-// if true, verbose information will be printed to stdout
-var VERBOSE = false
-
-// set to true for detailed debugging information
-var debugflag = false
-
-const NAMESPACE = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
-
-var containerPattern = regexp.MustCompile(`^(word/document\.xml)|(word/footer[0-9]+\.xml)|(word/header[0-9]+\.xml)$`)
+	// set to true for detailed debugging information
+	debugflag = false
+)

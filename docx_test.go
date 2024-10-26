@@ -75,15 +75,7 @@ func TestDocModifyTpl3(t *testing.T) {
 		Skip   bool
 		Title  string
 		List   []string
-	}{
-		Bullet: "",
-		Cell:   " ",
-		Header: "",
-		Footer: "",
-		Skip:   false,
-		Title:  "",
-		List:   []string{},
-	}
+	}{}
 
 	err := ModifyText(source, NewTplReplacer(c), target3)
 	if err != nil {

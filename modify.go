@@ -11,8 +11,9 @@ import (
 
 // A replacer replaces a string with a list modified string. It is provide the container name where replacement will occur ("word/document.xm", "word/footer1.xml", ...).
 // Only documents, headers and footers will be submitted.
-// If the returned slice is empty, the paragraph is removed.
+// If the returned slice is empty, the paragraph is removed (unless the REMOVE_EMPTY_PRAGRAPHS flag was unset))
 // If the returned slice contains more than 1 element, new paragraphs are added, duplicated from the original paragraph.
+// The strings will be xml-escaped later, Replacer should not escape its results.
 type Replacer func(container string, original string) (replaced []string)
 
 // All text from the sourceFile is modified by applying the replace function to it.
@@ -202,15 +203,19 @@ func (cd *custDecoder) processRuns() {
 }
 
 // Insert provided text in paragraph.
-// If slice is empty, current paragraph is discarded.
+// If slice is empty, current paragraph is discarded (unless discardflag is false)
 // If slice has more than 1 element, current paragraph is duplicated as needed.
 // When the function is called, an entire paraggraph should be available in res.
 func (cd *custDecoder) insert(paras []string) {
 	defer cd.debug("after paragragrph insertions")
 	if len(paras) == 0 {
-		cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
-		cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the tag following the paraggraph
-		return
+		if REMOVE_EMPTY_PARAGRAPH {
+			cd.res = cd.res[:cd.curPara]            // destroy the paragraph, the last copy was made for </p>
+			cd.lastSaved = cd.dec.InputOffset() - 1 // saving will resume at the tag following the paraggraph
+			return
+		} else {
+			paras = []string{""} // make sure we have something to insert
+		}
 	}
 	cd.res[cd.firstRunText] = xmlEscape([]byte(paras[0])) // save escapes 1st content to first run
 	if len(paras) == 1 {
