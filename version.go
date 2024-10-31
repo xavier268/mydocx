@@ -15,12 +15,13 @@ import "regexp"
 // v0.2.0 change Replacer, allow add/destroy paragraphs
 // v0.2.1 add template functions
 // v0.2.2 add option never to remove paragraphs that become empty
+// v0.2.3 use io.Reader/Writer as an alternative to file name for extract/modify
 
 const (
 	AUTHOR      = "Xavier Gandillot"
 	DESCRIPTION = "A simple library to modify Microsoft Word .docx documents with go templates"
 	NAME        = "mydocx"
-	VERSION     = "0.2.2"
+	VERSION     = "0.2.3"
 	COPYRIGHT   = "(c) Xavier Gandillot 2024"
 	NAMESPACE   = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 )
@@ -28,7 +29,7 @@ const (
 var (
 	// if true, verbose information will be printed to stdout
 	VERBOSE = false
-	
+
 	// If set to true, paragraphs that become empty after replacement are removed (paragraphs that were initially empty, before replacement, are never removed).
 	// If false, paragraphs that become empty are kept.
 	// Use the functions {{removeEmpty}}  or {{keepEmpty}} in the source word document to set this value.

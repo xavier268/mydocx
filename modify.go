@@ -22,20 +22,37 @@ type Replacer func(container string, original string) (replaced []string)
 // If the Replacer is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing subsequent paragraph formatting ).
 // If the targetFile name is empty, the sourceFile will be used, modification will be done in place.
 func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) error {
-
 	if targetFilePath == "" {
 		targetFilePath = sourceFilePath
 	}
 	if VERBOSE {
 		fmt.Println("Modifying : ", sourceFilePath, "-->", targetFilePath)
 	}
+	in, err := os.ReadFile(sourceFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read input file: %v", err)
+	}
+	var out []byte
+	out, err = ModifyTextBytes(in, replace)
+	if err != nil {
+		return fmt.Errorf("failed to modify text: %v", err)
+	}
+	os.WriteFile(targetFilePath, out, 0644)
+	return nil
+}
+
+// All text from the sourceBytes is modified by applying the Replacer.
+// Before calling Replacer, the whole paragraph is collected as a single text, even if split on multiple runs.
+// Replacer is called paragraph by paragraph. It is never called on empty paragraphs.
+// If the Replacer is nil, text will be copied unmodified (but paragraph format WILL be extended from the start of paragraph, removing subsequent paragraph formatting).
+func ModifyTextBytes(sourceBytes []byte, replace Replacer) ([]byte, error) {
 
 	// Open the .docx (which is a zip file)
-	docxFile, err := zip.OpenReader(sourceFilePath)
+	docxFile, err := zip.NewReader(bytes.NewReader(sourceBytes), int64(len(sourceBytes)))
 	if err != nil {
-		return fmt.Errorf("failed to open docx file: %v", err)
+		return nil, fmt.Errorf("failed to open input bytes: %v", err)
 	}
-	defer docxFile.Close()
+	// defer docxFile.Close()
 
 	// default replace function, no change.
 	if replace == nil {
@@ -56,27 +73,27 @@ func ModifyText(sourceFilePath string, replace Replacer, targetFilePath string) 
 			}
 			documentContent, err = readFile(file)
 			if err != nil {
-				return fmt.Errorf("failed to read document.xml: %v", err)
+				return nil, fmt.Errorf("failed to read %s: %v", fname, err)
 			}
 			err = processContent(fname, documentContent, replace, zipWriter)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			continue // to next file container ...
 		}
 		// Copy other files unmodified into the new .docx
 		if err := copyFileToZip(zipWriter, file); err != nil {
-			return fmt.Errorf("failed to copy file: %v", err)
+			return nil, fmt.Errorf("failed to copy file: %v", err)
 		}
 	}
 
 	// Close the zip writer
 	if err := zipWriter.Close(); err != nil {
-		return fmt.Errorf("failed to close zip writer: %v", err)
+		return nil, fmt.Errorf("failed to close zip writer: %v", err)
 	}
 
-	// Save the modified .docx
-	return os.WriteFile(targetFilePath, buffer.Bytes(), 0644)
+	// return
+	return buffer.Bytes(), nil
 }
 
 // process either the actual document.xml or the footer/header(s)

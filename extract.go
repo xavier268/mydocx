@@ -5,19 +5,40 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"os"
 
 	"bytes"
 )
 
 // Extract text content from docx file for external processing.
 // Returns a map from the container name (eg : word/footer1.xml) to a list of text contained in its paragraphs.
+// This function is thread-safe.
+// The verbose flag can be set to true to display information about the containers extracted.
 func ExtractText(sourceFilePath string) (map[string][]string, error) {
+	if VERBOSE {
+		fmt.Printf("Extracting text from %s\n", sourceFilePath)
+	}
+	data, err := os.ReadFile(sourceFilePath)
+	if err != nil {
+		return nil, err
+	}
+	return ExtractTextBytes(data)
+}
 
-	docxFile, err := zip.OpenReader(sourceFilePath)
+// Same as ExtractText, but takes a byte array as input.
+// This is useful for embedded use, when the docx file is already in memory.
+// Returns a map from the container name (eg : word/footer1.xml) to a list of text contained in its paragraphs.
+// This function is thread-safe.
+// The verbose flag can be set to true to display information about the containers extracted.
+func ExtractTextBytes(sourceBytes []byte) (map[string][]string, error) {
+
+	docxFile, err := zip.NewReader(bytes.NewReader(sourceBytes), int64(len(sourceBytes)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open docx file: %v", err)
 	}
-	defer docxFile.Close()
+
+	// no need to close, since byte buffer
+	// defer docxFile.Close()
 
 	result := make(map[string][]string)
 
