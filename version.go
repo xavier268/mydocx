@@ -17,12 +17,13 @@ import "regexp"
 // v0.2.2 add option never to remove paragraphs that become empty
 // v0.2.3 use io.Reader/Writer as an alternative to file name for extract/modify
 // v0.2.4 fix versionning and release issue
+// v0.2.5 remove utility function ReeaderToZip from public API
 
 const (
 	AUTHOR      = "Xavier Gandillot"
 	DESCRIPTION = "A simple library to modify Microsoft Word .docx documents with go templates"
 	NAME        = "mydocx"
-	VERSION     = "0.2.4"
+	VERSION     = "0.2.5"
 	COPYRIGHT   = "(c) Xavier Gandillot 2024"
 	NAMESPACE   = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 )

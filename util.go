@@ -2,7 +2,6 @@ package mydocx
 
 import (
 	"archive/zip"
-	"bytes"
 	"fmt"
 	"io"
 )
@@ -72,14 +71,4 @@ func (cd *custDecoder) dumpRes() {
 		fmt.Printf("%d:%s%q\n", i, h, (string)(s))
 	}
 	fmt.Println()
-}
-
-// Creates a zipRedaer from an io.Reader
-func ReaderToZipReader(r io.Reader) (*zip.Reader, error) {
-	body, err := io.ReadAll(r)
-	if err != nil {
-		return nil, err
-	}
-
-	return zip.NewReader(bytes.NewReader(body), int64(len(body)))
 }
