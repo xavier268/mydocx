@@ -119,7 +119,7 @@ All go template functions are available. In addition, the following built-in fun
 - `{{date}}`- Returns the current date, as 2006-02-10
 - `{{join}}` - Expects an array of strings and a delimiter string, returns a single concatenated string with the delimiter (see go function `strings.Join`)
 - `{{keepEmpty}}` - From this point, will never remove a paragraph that becomes empty after modification.
-- `{{removeEmpty}}`- From this point, non empty paragraphs tat become empty after `Replacer` is applied are removed. **This is the default**.
+- `{{removeEmpty}}`- From this point, non empty paragraphs that become empty after `Replacer` is applied are removed. **This is the default**.
 
 #### Register Custom Functions
 
