@@ -1,7 +1,7 @@
 === DIFF SUMMARY ===
 Total containers: 7
 Changed containers: 1
-Insertions: 6, Deletions: 5, Equal: 9
+Insertions: 11, Deletions: 10, Equal: 14
 
 === CONTAINER: word/document.xml ===
 {{.Title}}
@@ -11,10 +11,10 @@ This is a formatted word document, with multiple paragraphs.
 Each paragraph text content are treated as one, even if formatting may differ inside the paragraph. The formatting applied at the beginning of the paragraph is applied to the full paragraph. This should all be normal style.
 The formatting of the beginning of the paragraph is extended for the full paragraph. This entire text should now be all blue !
 Here, we <delete>will be</delete><insert>are</insert> testing insertions and deletions.<insert> This text was added at the end.</insert>
-Et ici, on va <delete>utilizer</delete><insert>utiliser</insert> des caractères <delete>accentués, role</delete><insert>accentuès, rôle</insert> !<delete>
-This</delete><insert>
+Et ici, on va <delete>utilizer</delete><insert>utiliser</insert> des caractères <delete>accentués,</delete><insert>accentuès,</insert> <delete>role</delete><insert>rôle</insert> !<delete>
+</delete><insert>
 
-This in a new</insert> paragraph <delete>is going to be completely deleted.
+</insert>This <delete>paragraph</delete><insert>in</insert> <delete>is</delete><insert>a</insert> <delete>going</delete><insert>new</insert> <delete>to</delete><insert>paragraph</insert> <delete>be completely deleted.
 
 
 </delete><insert>inserted.

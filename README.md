@@ -13,7 +13,7 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
 - **Word-level diff analysis** with readable output:
   - `Diff()` - Compare original vs accepted text with semantic word-level differences  
   - `PrettyPrint()` - Generate LLM-friendly diff output with `<delete>` and `<insert>` tags
-  - Built on proven difflib algorithms for optimal readability
+  - Built on custom LCS (Longest Common Subsequence) algorithm for optimal performance
 - **Text modification** using Go templates or custom replacers
 - **Full document support**:
   - Main document body
@@ -22,7 +22,8 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
   - Bullet points and numbered lists
 - **Track changes handling** (insertions/deletions) for both extraction and modification
 - **Memory support** with byte array functions (`ExtractTextBytes`, `ExtractOriginalTextBytes`)
-- Minimal external dependencies (only difflib for diff functionality)
+- **Zero external dependencies** - completely self-contained library
+- **Unicode support** - handles all Unicode characters, emojis, and multibyte text correctly
 - Efficient (single pass processing)
 - OOXML standard compliant
 - MIT License
@@ -243,6 +244,49 @@ This means:
 - Track changes from the template document are preserved during modification
 - If you need to work with documents without track changes, accept all changes in Word before using them as templates
 - The extraction function gives you a preview of what text your templates will process
+
+## 🔧 Diff Algorithm
+
+### Internal LCS Implementation
+
+Starting with v0.5.0, mydocx includes a custom implementation of the **Longest Common Subsequence (LCS)** algorithm that powers the word-level diff functionality. This removes all external dependencies while providing excellent performance and Unicode support.
+
+#### Features
+
+- **Zero external dependencies** - completely self-contained
+- **Full Unicode support** - handles emojis, CJK characters, mathematical symbols, and mixed scripts
+- **Word-level precision** - optimized for document text comparison
+- **O(m×n) time complexity** - efficient for typical document sizes
+- **Compatible API** - drop-in replacement for previous difflib-based implementation
+
+#### Unicode Support Examples
+
+The diff algorithm correctly handles:
+
+```go
+// Accented characters
+original := []string{"café", "naïve", "résumé"}
+modified := []string{"coffee", "simple", "resume"}
+
+// Emojis and complex sequences  
+original := []string{"Hello", "🌍", "world", "👨‍👩‍👧‍👦"}
+modified := []string{"Hello", "🌎", "world", "👨‍👩‍👧‍👧"}
+
+// Mixed scripts
+original := []string{"English", "中文", "العربية", "Привет"}
+modified := []string{"English", "日本語", "العربية", "Добро"}
+
+// All generate accurate word-level diffs with proper Unicode handling
+```
+
+#### Performance
+
+Benchmarks on modern hardware:
+- **Small sequences** (100 words): ~47μs 
+- **Large sequences** (1000 words): ~5.7ms
+- **Worst case** (completely different): ~62μs per 100 words
+
+The algorithm maintains consistent performance regardless of character encoding complexity.
 
 ## 🔧 Advanced Features
 

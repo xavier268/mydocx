@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/pmezard/go-difflib/difflib"
+	"github.com/xavier268/mydocx/diff"
 )
 
 // diffOperation represents a single diff operation
@@ -143,8 +143,8 @@ func diffAtWordLevel(original, accepted string) []internalDiff {
 	originalWords := splitIntoWords(original)
 	acceptedWords := splitIntoWords(accepted)
 
-	// Use difflib for proper word-level diff
-	matcher := difflib.NewMatcher(originalWords, acceptedWords)
+	// Use our internal diff package for proper word-level diff
+	matcher := diff.NewMatcher(originalWords, acceptedWords)
 	opcodes := matcher.GetOpCodes()
 
 	result := make([]internalDiff, 0)

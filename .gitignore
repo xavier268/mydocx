@@ -24,6 +24,8 @@ go.work.sum
 # env file
 .env
 
-# Test extracted files
-testFiles/test-extracted/
-testFiles/test-original.txt
+# json local settings
+*.json
+
+# docx debugging
+testFiles/test-extracted/*
