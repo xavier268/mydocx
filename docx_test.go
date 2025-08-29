@@ -2,11 +2,13 @@ package mydocx
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 )
 
 var source string = filepath.Join("testFiles", "test.docx")
+var targettxt string = filepath.Join("testFiles", "test-modified.txt")
 var target1 string = filepath.Join("testFiles", "test-modified1.docx")
 var target2 string = filepath.Join("testFiles", "test-modified-tpl2.docx")
 var target3 string = filepath.Join("testFiles", "test-modified-tpl3.docx")
@@ -28,6 +30,21 @@ func TestDocExtract0(t *testing.T) {
 		fmt.Printf("=== %q ===\n", k)
 		for i, p := range v {
 			fmt.Printf("%d: %q\n", i, p)
+		}
+	}
+
+	f, err := os.OpenFile(targettxt, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Println("Error:", err)
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	fmt.Fprintln(f, "Extracted content for debugging")
+	for k, v := range pp {
+		fmt.Fprintf(f, "=== %q ===\n", k)
+		for i, p := range v {
+			fmt.Fprintf(f, "%d: %q\n", i, p)
 		}
 	}
 

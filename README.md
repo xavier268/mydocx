@@ -14,6 +14,7 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
   - Headers and footers
   - Tables and cells
   - Bullet points and numbered lists
+- Track changes handling (insertions/deletions)
 - Zero external dependencies
 - Efficient (single pass processing)
 - OOXML standard compliant
@@ -104,6 +105,41 @@ func myReplacer(container, text string) []string {
 // Use your replacer
 err := mydocx.ModifyText("input.docx", myReplacer, "output.docx")
 ```
+
+## 📝 Track Changes Support
+
+This library handles Microsoft Word track changes (revisions) differently for extraction versus modification operations:
+
+### Text Extraction
+
+During text extraction (`ExtractText`), track changes are processed as follows:
+- **Deletions**: Text marked for deletion is **excluded** from the extracted content
+- **Insertions**: Text marked as inserted is **included** in the extracted content
+- **Result**: The extracted text represents the "accepted changes" version
+
+Example:
+```
+Document with track changes: "Hello [deleted: old] [inserted: new] world"
+Extracted text: "Hello new world"
+```
+
+### Text Modification
+
+During text modification (`ModifyText`), track changes are handled differently:
+- **Deletions**: Deletion markup is preserved unchanged in the output document
+- **Insertions**: Insertion markup is preserved unchanged in the output document  
+- **Templates/Replacers**: Only operate on the "clean" text (like extraction), but track changes markup is maintained in the final document
+
+This means:
+1. Your templates and replacers work with clean text (as if changes were accepted)
+2. The original track changes markup is preserved in the template document
+3. The output document maintains the same revision history as the input template
+
+### Important Notes
+
+- Track changes from the template document are preserved during modification
+- If you need to work with documents without track changes, accept all changes in Word before using them as templates
+- The extraction function gives you a preview of what text your templates will process
 
 ## 🔧 Advanced Features
 

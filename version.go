@@ -19,12 +19,13 @@ import "regexp"
 // v0.2.4 fix versionning and release issue
 // v0.2.5 remove utility function ReeaderToZip from public API
 // v0.3.1 move to go 1.25
+// v0.4.1 handle deletions/insertions when extracting text (and for templating)
 
 const (
 	AUTHOR      = "Xavier Gandillot"
 	DESCRIPTION = "A simple library to modify Microsoft Word .docx documents with go templates"
 	NAME        = "mydocx"
-	VERSION     = "0.3.1"
+	VERSION     = "0.4.1"
 	COPYRIGHT   = "(c) Xavier Gandillot 2024,2025"
 	NAMESPACE   = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 )

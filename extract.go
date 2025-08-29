@@ -109,12 +109,16 @@ func extractRuns(dec *xml.Decoder) (tt string, err error) {
 	return tt, err
 }
 
+// Extact text exactly as if all changes have been accepetd. Deletions are ingored, insertions are included.
 func extractText(dec *xml.Decoder) string {
 	var tt = ""
+	var inDeletion = false
 	for tok, err := dec.Token(); err == nil; tok, err = dec.Token() {
 		switch t := tok.(type) {
 		case xml.StartElement:
-			if t.Name.Local == "t" && t.Name.Space == NAMESPACE {
+			if t.Name.Local == "del" && t.Name.Space == NAMESPACE {
+				inDeletion = true
+			} else if t.Name.Local == "t" && t.Name.Space == NAMESPACE && !inDeletion {
 				cdt, err := dec.Token()
 				if err != nil {
 					break
@@ -122,10 +126,22 @@ func extractText(dec *xml.Decoder) string {
 				if data, ok := cdt.(xml.CharData); ok {
 					tt = tt + string(data)
 				}
-
+			} else if t.Name.Local == "delText" && t.Name.Space == NAMESPACE {
+				// Skip deleted text content entirely
+				for {
+					tok, err := dec.Token()
+					if err != nil {
+						break
+					}
+					if endEl, ok := tok.(xml.EndElement); ok && endEl.Name.Local == "delText" && endEl.Name.Space == NAMESPACE {
+						break
+					}
+				}
 			}
 		case xml.EndElement:
-			if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
+			if t.Name.Local == "del" && t.Name.Space == NAMESPACE {
+				inDeletion = false
+			} else if t.Name.Local == "r" && t.Name.Space == NAMESPACE {
 				return tt
 			}
 		}
