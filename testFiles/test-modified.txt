@@ -7,7 +7,7 @@ Extracted content for debugging
 4: "Each paragraph text content are treated as one, even if formatting may differ inside the paragraph. The formatting applied at the beginning of the paragraph is applied to the full paragraph. This should all be normal style."
 5: "The formatting of the beginning of the paragraph is extended for the full paragraph. This entire text should now be all blue !"
 6: "Here, we are testing insertions and deletions. This text was added at the end."
-7: ""
+7: "Et ici, on va utiliser des caractères accentuès, rôle !"
 8: ""
 9: "This in a new paragraph inserted."
 10: ""

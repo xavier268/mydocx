@@ -45,13 +45,13 @@ func TestDocExtract0(t *testing.T) {
 	defer f.Close()
 
 	fmt.Fprintln(f, "Extracted content for debugging")
-	
+
 	keys := make([]string, 0, len(pp))
 	for k := range pp {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	
+
 	for _, k := range keys {
 		v := pp[k]
 		fmt.Fprintf(f, "=== %q ===\n", k)
@@ -217,7 +217,7 @@ func TestDocExtractOriginal(t *testing.T) {
 		fmt.Println("Error:", err)
 		t.Fatal(err)
 	}
-	
+
 	fmt.Println()
 	for k, v := range pp {
 		fmt.Printf("=== Original %q ===\n", k)
@@ -235,13 +235,13 @@ func TestDocExtractOriginal(t *testing.T) {
 	defer f.Close()
 
 	fmt.Fprintln(f, "Extracted original content (ignoring all revisions)")
-	
+
 	keys := make([]string, 0, len(pp))
 	for k := range pp {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	
+
 	for _, k := range keys {
 		v := pp[k]
 		fmt.Fprintf(f, "=== Original %q ===\n", k)

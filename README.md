@@ -10,6 +10,10 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
 - **Text extraction** from DOCX files with two modes:
   - `ExtractText()` - Extract text with changes accepted (insertions included, deletions ignored)
   - `ExtractOriginalText()` - Extract original text with changes rejected (insertions ignored, deletions restored)
+- **Word-level diff analysis** with readable output:
+  - `Diff()` - Compare original vs accepted text with semantic word-level differences  
+  - `PrettyPrint()` - Generate LLM-friendly diff output with `<delete>` and `<insert>` tags
+  - Built on proven difflib algorithms for optimal readability
 - **Text modification** using Go templates or custom replacers
 - **Full document support**:
   - Main document body
@@ -18,7 +22,7 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
   - Bullet points and numbered lists
 - **Track changes handling** (insertions/deletions) for both extraction and modification
 - **Memory support** with byte array functions (`ExtractTextBytes`, `ExtractOriginalTextBytes`)
-- Zero external dependencies
+- Minimal external dependencies (only difflib for diff functionality)
 - Efficient (single pass processing)
 - OOXML standard compliant
 - MIT License
@@ -67,6 +71,58 @@ func main() {
         }
     }
 }
+```
+
+### Document Diff Analysis
+
+```go
+import "github.com/xavier268/mydocx"
+
+func main() {
+    // Extract both original and accepted versions
+    original, err := mydocx.ExtractOriginalText("document.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    accepted, err := mydocx.ExtractText("document.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    // Generate word-level diff analysis
+    diffResult := mydocx.Diff(original, accepted)
+    
+    // Get readable diff output for LLM analysis
+    prettyDiff := diffResult.PrettyPrint()
+    fmt.Println(prettyDiff)
+    
+    // Access structured diff data
+    fmt.Printf("Total containers: %d\n", diffResult.Summary.TotalContainers)
+    fmt.Printf("Changed containers: %d\n", diffResult.Summary.ChangedContainers)
+    fmt.Printf("Insertions: %d, Deletions: %d\n", 
+        diffResult.Summary.TotalInsertions, 
+        diffResult.Summary.TotalDeletions)
+        
+    // Process individual container diffs
+    for containerName, containerDiff := range diffResult.ContainerDiffs {
+        fmt.Printf("Changes in %s:\n", containerName)
+        for _, op := range containerDiff.Operations {
+            fmt.Printf("  %s: %q\n", op.Type, op.Text)
+        }
+    }
+}
+```
+
+Example diff output:
+```
+=== DIFF SUMMARY ===
+Total containers: 3
+Changed containers: 1
+Insertions: 2, Deletions: 1, Equal: 5
+
+=== CONTAINER: word/document.xml ===
+The document contains <delete>old content</delete><insert>new updated content</insert> here.
 ```
 
 ### Using Go Templates

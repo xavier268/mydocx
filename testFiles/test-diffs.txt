@@ -1,0 +1,61 @@
+=== DIFF SUMMARY ===
+Total containers: 7
+Changed containers: 1
+Insertions: 6, Deletions: 5, Equal: 9
+
+=== CONTAINER: word/document.xml ===
+{{.Title}}
+
+Today is {{date}}.
+This is a formatted word document, with multiple paragraphs.
+Each paragraph text content are treated as one, even if formatting may differ inside the paragraph. The formatting applied at the beginning of the paragraph is applied to the full paragraph. This should all be normal style.
+The formatting of the beginning of the paragraph is extended for the full paragraph. This entire text should now be all blue !
+Here, we <delete>will be</delete><insert>are</insert> testing insertions and deletions.<insert> This text was added at the end.</insert>
+Et ici, on va <delete>utilizer</delete><insert>utiliser</insert> des caractères <delete>accentués, role</delete><insert>accentuès, rôle</insert> !<delete>
+This</delete><insert>
+
+This in a new</insert> paragraph <delete>is going to be completely deleted.
+
+
+</delete><insert>inserted.
+
+</insert>Now, we are testing the template (§3 below will never be removed, even if empty, §4 will be removed if .Skip is set to true) :
+This bullet point has no template
+This bullet point was modified {{.Bullet}}
+{{keepEmpty}}{{if not .Skip}}This bullet is skipped on demand{{end}}
+{{removeEmpty}}{{if not .Skip}}This bullet is skipped on demand{{end}}
+
+
+Using the “nl” function will create a new paragraph.{{nl}}You see ?
+
+
+
+(new page here)
+
+
+
+Let’s add a table below, and fill some of the cells (we keep empty paragraphs to prevent empty cells)  : {{keepEmpty}}
+{{.Cell}}
+{{.Cell}}
+
+
+
+
+{{.Cell}}
+
+
+
+
+{{.Cell}}
+{{removeEmpty}}
+
+
+Using the “range” template :
+{{range .List}}{{.}}{{nl}}{{end}}
+Using the “join” function :
+{{join .List `\n` }}
+
+
+Version : {{version}}
+Copyright: {{copyright}}
+

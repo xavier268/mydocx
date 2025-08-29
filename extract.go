@@ -237,7 +237,7 @@ func extractOriginalParagraphs(dec *xml.Decoder) (res []string, err error) {
 // Extract original text from the runs in a given paragraph, checking if paragraph is inserted.
 func extractOriginalRunsFromParagraph(dec *xml.Decoder) (tt string, isInsertedParagraph bool, err error) {
 	isInsertedParagraph = false
-	
+
 	for tok, err := dec.Token(); err == nil; tok, err = dec.Token() {
 		switch t := tok.(type) {
 		case xml.StartElement:
