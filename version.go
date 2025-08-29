@@ -22,12 +22,13 @@ import "regexp"
 // v0.4.1 handle deletions/insertions when extracting text (and for templating)
 // v0.4.2 add ExtractOriginalText/ExtractOriginalTextBytes functions to extract text as if all changes were rejected (insertions ignored, deletions restored)
 // v0.4.3 add word-level diff analysis with Diff() and PrettyPrint() functions for comparing original vs accepted text with LLM-friendly output
+// v0.4.4 add DiffAnalyse() convenience function for one-line DOCX diff analysis
 
 const (
 	AUTHOR      = "Xavier Gandillot"
 	DESCRIPTION = "A simple library to modify Microsoft Word .docx documents with go templates"
 	NAME        = "mydocx"
-	VERSION     = "0.4.3"
+	VERSION     = "0.4.4"
 	COPYRIGHT   = "(c) Xavier Gandillot 2024,2025"
 	NAMESPACE   = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 )

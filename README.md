@@ -75,6 +75,24 @@ func main() {
 
 ### Document Diff Analysis
 
+#### Simple One-Line Analysis
+
+```go
+import "github.com/xavier268/mydocx"
+
+func main() {
+    // Get LLM-friendly diff analysis in one line
+    analysis, err := mydocx.DiffAnalyse("document.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
+    
+    fmt.Print(analysis) // Ready for LLM processing
+}
+```
+
+#### Detailed Diff Processing
+
 ```go
 import "github.com/xavier268/mydocx"
 

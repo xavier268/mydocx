@@ -8,37 +8,37 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 )
 
-// DiffOperation represents a single diff operation
-type DiffOperation struct {
+// diffOperation represents a single diff operation
+type diffOperation struct {
 	Type      string // "equal", "delete", "insert"
 	Text      string
 	Container string
 	Paragraph int
 }
 
-// DiffOpType represents the type of diff operation
-type DiffOpType string
+// diffOpType represents the type of diff operation
+type diffOpType string
 
 const (
-	DiffEqual  DiffOpType = "equal"
-	DiffDelete DiffOpType = "delete"
-	DiffInsert DiffOpType = "insert"
+	diffEqual  diffOpType = "equal"
+	diffDelete diffOpType = "delete"
+	diffInsert diffOpType = "insert"
 )
 
-// InternalDiff represents a diff operation used internally
-type InternalDiff struct {
-	Type DiffOpType
+// internalDiff represents a diff operation used internally
+type internalDiff struct {
+	Type diffOpType
 	Text string
 }
 
-// ContainerDiff represents differences in a single container
-type ContainerDiff struct {
-	Operations []DiffOperation
+// containerDiff represents differences in a single container
+type containerDiff struct {
+	Operations []diffOperation
 }
 
 // DiffResult represents the complete diff between original and accepted text
 type DiffResult struct {
-	ContainerDiffs map[string]ContainerDiff
+	ContainerDiffs map[string]containerDiff
 	Summary        DiffSummary
 }
 
@@ -54,7 +54,7 @@ type DiffSummary struct {
 // Diff compares original and accepted extracted text and returns a structured diff
 func Diff(original, accepted map[string][]string) *DiffResult {
 	result := &DiffResult{
-		ContainerDiffs: make(map[string]ContainerDiff),
+		ContainerDiffs: make(map[string]containerDiff),
 		Summary:        DiffSummary{},
 	}
 
@@ -107,9 +107,9 @@ func Diff(original, accepted map[string][]string) *DiffResult {
 }
 
 // diffContainer compares paragraphs within a single container using word-level diff
-func diffContainer(original, accepted []string) ContainerDiff {
-	containerDiff := ContainerDiff{
-		Operations: make([]DiffOperation, 0),
+func diffContainer(original, accepted []string) containerDiff {
+	containerDiff := containerDiff{
+		Operations: make([]diffOperation, 0),
 	}
 
 	// Convert paragraph arrays to single strings for comparison
@@ -126,7 +126,7 @@ func diffContainer(original, accepted []string) ContainerDiff {
 
 	// Convert to our DiffOperation format
 	for _, diff := range diffs {
-		op := DiffOperation{
+		op := diffOperation{
 			Type:      string(diff.Type),
 			Text:      diff.Text,
 			Container: "",
@@ -138,7 +138,7 @@ func diffContainer(original, accepted []string) ContainerDiff {
 }
 
 // diffAtWordLevel performs word-level diff comparison
-func diffAtWordLevel(original, accepted string) []InternalDiff {
+func diffAtWordLevel(original, accepted string) []internalDiff {
 	// Split texts into words for word-level comparison
 	originalWords := splitIntoWords(original)
 	acceptedWords := splitIntoWords(accepted)
@@ -147,7 +147,7 @@ func diffAtWordLevel(original, accepted string) []InternalDiff {
 	matcher := difflib.NewMatcher(originalWords, acceptedWords)
 	opcodes := matcher.GetOpCodes()
 
-	result := make([]InternalDiff, 0)
+	result := make([]internalDiff, 0)
 
 	for _, opcode := range opcodes {
 		tag := opcode.Tag
@@ -157,39 +157,39 @@ func diffAtWordLevel(original, accepted string) []InternalDiff {
 		case 'e': // equal
 			if i1 < i2 {
 				text := strings.Join(originalWords[i1:i2], "")
-				result = append(result, InternalDiff{
-					Type: DiffEqual,
+				result = append(result, internalDiff{
+					Type: diffEqual,
 					Text: text,
 				})
 			}
 		case 'd': // delete
 			if i1 < i2 {
 				text := strings.Join(originalWords[i1:i2], "")
-				result = append(result, InternalDiff{
-					Type: DiffDelete,
+				result = append(result, internalDiff{
+					Type: diffDelete,
 					Text: text,
 				})
 			}
 		case 'i': // insert
 			if j1 < j2 {
 				text := strings.Join(acceptedWords[j1:j2], "")
-				result = append(result, InternalDiff{
-					Type: DiffInsert,
+				result = append(result, internalDiff{
+					Type: diffInsert,
 					Text: text,
 				})
 			}
 		case 'r': // replace
 			if i1 < i2 {
 				text := strings.Join(originalWords[i1:i2], "")
-				result = append(result, InternalDiff{
-					Type: DiffDelete,
+				result = append(result, internalDiff{
+					Type: diffDelete,
 					Text: text,
 				})
 			}
 			if j1 < j2 {
 				text := strings.Join(acceptedWords[j1:j2], "")
-				result = append(result, InternalDiff{
-					Type: DiffInsert,
+				result = append(result, internalDiff{
+					Type: diffInsert,
 					Text: text,
 				})
 			}
@@ -268,6 +268,27 @@ func (dr *DiffResult) PrettyPrint() string {
 	}
 
 	return result.String()
+}
+
+// DiffAnalyse reads a DOCX file and generates an LLM-friendly string showing insertions and deletions
+func DiffAnalyse(filepath string) (commentedFileContent string, err error) {
+	// Extract original text (treating as if all changes were rejected)
+	original, err := ExtractOriginalText(filepath)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract original text: %v", err)
+	}
+
+	// Extract accepted text (treating as if all changes were accepted)
+	accepted, err := ExtractText(filepath)
+	if err != nil {
+		return "", fmt.Errorf("failed to extract accepted text: %v", err)
+	}
+
+	// Generate diff analysis
+	diffResult := Diff(original, accepted)
+
+	// Return pretty printed diff
+	return diffResult.PrettyPrint(), nil
 }
 
 // escapeText escapes angle brackets in text to avoid confusion with diff tags

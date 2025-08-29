@@ -256,6 +256,40 @@ func TestMergedOperations(t *testing.T) {
 	t.Logf("Found %d delete operations and %d insert operations", deleteCount, insertCount)
 }
 
+// TestDiffAnalyse tests the DiffAnalyse convenience function
+func TestDiffAnalyse(t *testing.T) {
+	testFile := "testFiles/test.docx"
+
+	// Check if test file exists
+	if _, err := os.Stat(testFile); os.IsNotExist(err) {
+		t.Skipf("Test file %s not found, skipping test", testFile)
+		return
+	}
+
+	// Use DiffAnalyse function
+	commentedContent, err := DiffAnalyse(testFile)
+	if err != nil {
+		t.Fatalf("DiffAnalyse failed: %v", err)
+	}
+
+	// Verify output contains expected diff markers
+	if !contains(commentedContent, "=== DIFF SUMMARY ===") {
+		t.Error("Expected diff summary header")
+	}
+
+	if !contains(commentedContent, "<delete>") || !contains(commentedContent, "<insert>") {
+		t.Error("Expected diff tags in output")
+	}
+
+	// Should contain container information
+	if !contains(commentedContent, "=== CONTAINER:") {
+		t.Error("Expected container section headers")
+	}
+
+	t.Logf("DiffAnalyse output length: %d characters", len(commentedContent))
+	t.Logf("DiffAnalyse output preview:\n%.200s...", commentedContent)
+}
+
 // Helper function to check if string contains substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || contains(s[1:], substr) || (len(s) > len(substr) && s[:len(substr)] == substr))
