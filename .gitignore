@@ -26,3 +26,4 @@ go.work.sum
 
 # Test extracted files
 testFiles/test-extracted/
+testFiles/test-original.txt

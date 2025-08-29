@@ -208,3 +208,45 @@ func extractFile(f *zip.File, destDir string) error {
 	_, err = io.Copy(outFile, rc)
 	return err
 }
+
+func TestDocExtractOriginal(t *testing.T) {
+	t.Log(t.Name(), "is extracting original text (ignoring all revisions)")
+
+	pp, err := ExtractOriginalText(source)
+	if err != nil {
+		fmt.Println("Error:", err)
+		t.Fatal(err)
+	}
+	
+	fmt.Println()
+	for k, v := range pp {
+		fmt.Printf("=== Original %q ===\n", k)
+		for i, p := range v {
+			fmt.Printf("%d: %q\n", i, p)
+		}
+	}
+
+	targetOriginal := filepath.Join("testFiles", "test-original.txt")
+	f, err := os.OpenFile(targetOriginal, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Println("Error:", err)
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	fmt.Fprintln(f, "Extracted original content (ignoring all revisions)")
+	
+	keys := make([]string, 0, len(pp))
+	for k := range pp {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	for _, k := range keys {
+		v := pp[k]
+		fmt.Fprintf(f, "=== Original %q ===\n", k)
+		for i, p := range v {
+			fmt.Fprintf(f, "%d: %q\n", i, p)
+		}
+	}
+}

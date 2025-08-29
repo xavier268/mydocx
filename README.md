@@ -7,14 +7,17 @@ A powerful Go library for extracting and manipulating text in Microsoft Word (DO
 
 ## ✨ Features
 
-- Text extraction from DOCX files
-- Text modification using Go templates or custom replacers
-- Support for:
+- **Text extraction** from DOCX files with two modes:
+  - `ExtractText()` - Extract text with changes accepted (insertions included, deletions ignored)
+  - `ExtractOriginalText()` - Extract original text with changes rejected (insertions ignored, deletions restored)
+- **Text modification** using Go templates or custom replacers
+- **Full document support**:
   - Main document body
   - Headers and footers
   - Tables and cells
   - Bullet points and numbered lists
-- Track changes handling (insertions/deletions)
+- **Track changes handling** (insertions/deletions) for both extraction and modification
+- **Memory support** with byte array functions (`ExtractTextBytes`, `ExtractOriginalTextBytes`)
 - Zero external dependencies
 - Efficient (single pass processing)
 - OOXML standard compliant
@@ -35,16 +38,30 @@ import "github.com/xavier268/mydocx"
 
 func main() {
     // Extract text from all document parts (main body, headers, footers)
+    // This extracts text as if all track changes were ACCEPTED
     content, err := mydocx.ExtractText("document.docx")
     if err != nil {
         log.Fatal(err)
     }
 
-    // content is a map[string][]string where:
+    // Extract original text as if all track changes were REJECTED
+    original, err := mydocx.ExtractOriginalText("document.docx")
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // Both return a map[string][]string where:
     // - key is the container name (e.g., "word/document.xml", "word/footer1.xml")
     // - value is a slice of strings, one for each paragraph
     for container, paragraphs := range content {
-        fmt.Printf("Content from %s:\n", container)
+        fmt.Printf("Content from %s (changes accepted):\n", container)
+        for _, para := range paragraphs {
+            fmt.Println(para)
+        }
+    }
+    
+    for container, paragraphs := range original {
+        fmt.Printf("Original content from %s (changes rejected):\n", container)
         for _, para := range paragraphs {
             fmt.Println(para)
         }
@@ -108,19 +125,31 @@ err := mydocx.ModifyText("input.docx", myReplacer, "output.docx")
 
 ## 📝 Track Changes Support
 
-This library handles Microsoft Word track changes (revisions) differently for extraction versus modification operations:
+This library provides comprehensive support for Microsoft Word track changes (revisions) with different extraction modes:
 
-### Text Extraction
+### Text Extraction Options
 
-During text extraction (`ExtractText`), track changes are processed as follows:
+#### 1. Extract with Changes Accepted (`ExtractText`)
 - **Deletions**: Text marked for deletion is **excluded** from the extracted content
 - **Insertions**: Text marked as inserted is **included** in the extracted content
 - **Result**: The extracted text represents the "accepted changes" version
 
+#### 2. Extract Original Text (`ExtractOriginalText`)
+- **Deletions**: Text marked for deletion is **included** to restore original content
+- **Insertions**: Text marked as inserted is **excluded** from the extracted content  
+- **Result**: The extracted text represents the original document before any changes
+
+#### 3. Byte Array Support
+Both extraction modes also support byte array input:
+- `ExtractTextBytes([]byte)` - Extract with changes accepted
+- `ExtractOriginalTextBytes([]byte)` - Extract original text with changes rejected
+
 Example:
 ```
 Document with track changes: "Hello [deleted: old] [inserted: new] world"
-Extracted text: "Hello new world"
+
+ExtractText result:         "Hello new world"      (changes accepted)
+ExtractOriginalText result: "Hello old world"      (changes rejected)
 ```
 
 ### Text Modification
