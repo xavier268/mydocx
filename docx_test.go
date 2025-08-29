@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -44,7 +45,15 @@ func TestDocExtract0(t *testing.T) {
 	defer f.Close()
 
 	fmt.Fprintln(f, "Extracted content for debugging")
-	for k, v := range pp {
+	
+	keys := make([]string, 0, len(pp))
+	for k := range pp {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	
+	for _, k := range keys {
+		v := pp[k]
 		fmt.Fprintf(f, "=== %q ===\n", k)
 		for i, p := range v {
 			fmt.Fprintf(f, "%d: %q\n", i, p)

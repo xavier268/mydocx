@@ -1,16 +1,4 @@
 Extracted content for debugging
-=== "word/header1.xml" ===
-0: ""
-=== "word/header2.xml" ===
-0: "This a dynamic header  {{ .Header }} rest of header"
-=== "word/footer1.xml" ===
-0: ""
-=== "word/footer2.xml" ===
-0: "Here is a dynamic footer  {{.Footer}}  rest of footer"
-=== "word/header3.xml" ===
-0: ""
-=== "word/footer3.xml" ===
-0: ""
 === "word/document.xml" ===
 0: "{{.Title}}"
 1: ""
@@ -62,3 +50,15 @@ Extracted content for debugging
 47: ""
 48: "Version : {{version}}"
 49: "Copyright: {{copyright}}"
+=== "word/footer1.xml" ===
+0: ""
+=== "word/footer2.xml" ===
+0: "Here is a dynamic footer  {{.Footer}}  rest of footer"
+=== "word/footer3.xml" ===
+0: ""
+=== "word/header1.xml" ===
+0: ""
+=== "word/header2.xml" ===
+0: "This a dynamic header  {{ .Header }} rest of header"
+=== "word/header3.xml" ===
+0: ""
